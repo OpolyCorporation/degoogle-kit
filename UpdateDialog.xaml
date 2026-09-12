@@ -1,0 +1,37 @@
+<Window x:Class="DeGoogleKit.UpdateDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Update available"
+        Width="480" Height="420"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource Bg}">
+    <DockPanel Margin="24">
+        <StackPanel DockPanel.Dock="Bottom">
+            <ProgressBar x:Name="DownloadBar" Height="8" Minimum="0" Maximum="100" Visibility="Collapsed" Margin="0,0,0,10"/>
+            <TextBlock x:Name="StatusText" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+            <Button x:Name="NowBtn" Content="Update now" Style="{StaticResource PrimaryBtn}" Click="OnNow" Margin="0,0,0,8" HorizontalAlignment="Stretch"/>
+            <Button x:Name="LaterBtn" Content="Later — remind me next time I open the app" Style="{StaticResource GhostBtn}" Click="OnLater" Margin="0,0,0,8" HorizontalAlignment="Stretch"/>
+            <Button x:Name="MidnightBtn" Content="At midnight — install while I sleep" Style="{StaticResource GhostBtn}" Click="OnMidnight" HorizontalAlignment="Stretch"/>
+        </StackPanel>
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
+                <Border Width="48" Height="48" CornerRadius="12" BorderBrush="{StaticResource Line}" BorderThickness="1">
+                    <Border.Background>
+                        <ImageBrush ImageSource="pack://application:,,,/Assets/brand.png" Stretch="UniformToFill"/>
+                    </Border.Background>
+                </Border>
+                <StackPanel Margin="12,2,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="Update available" FontSize="20" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="VersionText" Foreground="{StaticResource Accent}" FontSize="13"/>
+                </StackPanel>
+            </StackPanel>
+            <TextBlock Text="Do you want to update now, later, or at midnight?" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+            <Border Style="{StaticResource CardBorder}" MaxHeight="140">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TextBlock x:Name="ChangelogText" TextWrapping="Wrap"/>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+    </DockPanel>
+</Window>

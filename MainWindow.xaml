@@ -1,0 +1,567 @@
+﻿<Window x:Class="DeGoogleKit.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="DeGoogle Kit"
+        Height="760" Width="1120"
+        MinHeight="600" MinWidth="920"
+        Background="{StaticResource Bg}"
+        AllowDrop="True"
+        Drop="OnDrop"
+        DragOver="OnDragOver"
+        DragLeave="OnDragLeave"
+        Loaded="OnLoaded">
+    <Window.Resources>
+        <Style x:Key="FadeRowItem" TargetType="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <ContentPresenter/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <EventSetter Event="Loaded" Handler="OnRowLoaded"/>
+        </Style>
+        <Style x:Key="FadeRowPresenter" TargetType="ContentPresenter">
+            <EventSetter Event="Loaded" Handler="OnRowLoaded"/>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="232"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{StaticResource BgRaised}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Margin="16,20,16,4">
+                    <StackPanel Orientation="Horizontal">
+                        <Border x:Name="BrandMark" Width="52" Height="52" CornerRadius="14" BorderBrush="{StaticResource Line}" BorderThickness="1">
+                            <Border.Background>
+                                <ImageBrush ImageSource="pack://application:,,,/Assets/brand.png" Stretch="UniformToFill"/>
+                            </Border.Background>
+                        </Border>
+                        <StackPanel Margin="12,4,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="DeGoogle Kit" FontSize="16" FontWeight="Bold"/>
+                            <TextBlock x:Name="LicenseBadge" Text="Free" FontSize="12" Foreground="{StaticResource Accent}" Margin="0,2,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <Border x:Name="BrandLine" Height="3" CornerRadius="2" Margin="0,14,0,10">
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#3EE6A8" Offset="0"/>
+                                <GradientStop Color="#2F7BFF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                        <Border.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever" AutoReverse="True">
+                                        <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.55" To="1" Duration="0:0:2.2"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Border.Triggers>
+                    </Border>
+                    <TextBlock Text="Leave Google without wrecking your PC" Foreground="{StaticResource Muted}" TextWrapping="Wrap" FontSize="12"/>
+                </StackPanel>
+                <StackPanel DockPanel.Dock="Bottom" Margin="12,0,12,18">
+                    <TextBlock x:Name="VersionLabel" Foreground="{StaticResource Muted}" FontSize="11" Margin="4,0,4,8"/>
+                    <Button Content="Check for updates" Style="{StaticResource GhostBtn}" Click="OnCheckUpdates" HorizontalAlignment="Stretch" Margin="0,0,0,10"/>
+                    <TextBlock x:Name="SidebarHint" Foreground="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"/>
+                </StackPanel>
+                <StackPanel Margin="4,16,4,0">
+                    <RadioButton x:Name="NavOverview" Style="{StaticResource NavBtn}" Content="Overview" IsChecked="True" Checked="OnNav"/>
+                    <RadioButton x:Name="NavPlan" Style="{StaticResource NavBtn}" Content="Your plan" Checked="OnNav"/>
+                    <RadioButton x:Name="NavTakeout" Style="{StaticResource NavBtn}" Content="Drop Takeout" Checked="OnNav"/>
+                    <RadioButton x:Name="NavPc" Style="{StaticResource NavBtn}" Content="This PC" Checked="OnNav"/>
+                    <RadioButton x:Name="NavGuide" Style="{StaticResource NavBtn}" Content="Catalog" Checked="OnNav"/>
+                    <RadioButton x:Name="NavCoach" Style="{StaticResource NavBtn}" Content="AI Coach" Checked="OnNav"/>
+                    <RadioButton x:Name="NavGdpr" Style="{StaticResource NavBtn}" Content="Your GDPR rights" Checked="OnNav"/>
+                    <RadioButton x:Name="NavNetwork" Style="{StaticResource NavBtn}" Content="Network" Checked="OnNav"/>
+                    <RadioButton x:Name="NavPro" Style="{StaticResource NavBtn}" Content="Pro" Checked="OnNav"/>
+                    <RadioButton x:Name="NavPrivacy" Style="{StaticResource NavBtn}" Content="Privacy" Checked="OnNav"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <Grid Grid.Column="1" Margin="28,22,28,22" ClipToBounds="True">
+            <Grid x:Name="PageOverview">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel>
+                    <TextBlock Text="Overview" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock Text="Tell us what you use. Pick replacements. We move what we can locally. Nothing is deleted from Google until you verify." Foreground="{StaticResource Muted}" Margin="0,6,0,10" TextWrapping="Wrap"/>
+                    <Border x:Name="ScanRibbon" Height="3" CornerRadius="2" Margin="0,0,0,14" Opacity="0" HorizontalAlignment="Stretch"
+                            RenderTransformOrigin="0,0.5">
+                        <Border.RenderTransform>
+                            <ScaleTransform ScaleX="0" ScaleY="1"/>
+                        </Border.RenderTransform>
+                        <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                <GradientStop Color="#3EE6A8" Offset="0"/>
+                                <GradientStop Color="#2F7BFF" Offset="1"/>
+                            </LinearGradientBrush>
+                        </Border.Background>
+                    </Border>
+                </StackPanel>
+                <UniformGrid Grid.Row="1" Columns="2" Rows="2">
+                    <Border x:Name="CardApps" Style="{StaticResource CardBorder}" Margin="0,0,10,10">
+                        <StackPanel>
+                            <TextBlock Text="Google apps found" Foreground="{StaticResource Muted}"/>
+                            <TextBlock x:Name="StatApps" Text="—" FontSize="36" FontWeight="Bold" Margin="0,8,0,0"/>
+                            <TextBlock x:Name="StatAppsNote" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="CardBrowser" Style="{StaticResource CardBorder}" Margin="10,0,0,10">
+                        <StackPanel>
+                            <TextBlock Text="Default browser" Foreground="{StaticResource Muted}"/>
+                            <TextBlock x:Name="StatBrowser" Text="—" FontSize="28" FontWeight="Bold" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="StatBrowserNote" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="CardScore" Style="{StaticResource CardBorder}" Margin="0,10,10,0">
+                        <StackPanel>
+                            <TextBlock Text="DeGoogle score" Foreground="{StaticResource Muted}"/>
+                            <TextBlock x:Name="StatGuide" Text="—" FontSize="36" FontWeight="Bold" Margin="0,8,0,0"/>
+                            <ProgressBar x:Name="GuideBar" Margin="0,12,0,8" Minimum="0" Maximum="100"/>
+                            <TextBlock x:Name="ScoreRemain" Foreground="{StaticResource Muted}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                    <Border x:Name="CardCenter" Style="{StaticResource CardBorder}" Margin="10,10,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Centerpiece" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Text="Drop your Google Takeout here. We'll figure out the rest — on this PC, never on our servers." FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,12"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Open Takeout drop" Style="{StaticResource PrimaryBtn}" Click="OnOpenTakeout" Margin="0,0,8,0"/>
+                                <Button Content="Your plan" Style="{StaticResource GhostBtn}" Click="OnOpenPlan"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+            </Grid>
+
+            <Grid x:Name="PagePlan" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Margin="0,0,0,12">
+                    <TextBlock Text="Your DeGoogle plan" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock Text="Easy = Proton + Ente + Brave. Privacy = encrypted defaults + Firefox. Own everything = Nextcloud / Immich / self-host. We never delete Google for you." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                    <WrapPanel>
+                        <RadioButton x:Name="ModeEasy" Content="Easy" GroupName="mode" Style="{StaticResource NavBtn}" Checked="OnMode"/>
+                        <RadioButton x:Name="ModePrivacy" Content="Privacy" GroupName="mode" Style="{StaticResource NavBtn}" Checked="OnMode"/>
+                        <RadioButton x:Name="ModeOwn" Content="Own everything" GroupName="mode" Style="{StaticResource NavBtn}" Checked="OnMode"/>
+                    </WrapPanel>
+                    <WrapPanel Margin="0,6,0,0">
+                        <TextBlock Text="Chrome:" VerticalAlignment="Center" Margin="8,0,8,0" Foreground="{StaticResource Muted}"/>
+                        <Button Content="Brave (easy)" Style="{StaticResource GhostBtn}" Click="OnChromeBrave" Margin="0,0,8,4"/>
+                        <Button Content="Firefox (stronger)" Style="{StaticResource GhostBtn}" Click="OnChromeFirefox" Margin="0,0,8,4"/>
+                        <TextBlock Text="YouTube:" VerticalAlignment="Center" Margin="12,0,8,0" Foreground="{StaticResource Muted}"/>
+                        <Button Content="Reduce (FreeTube*)" Style="{StaticResource GhostBtn}" Click="OnYtReduce" Margin="0,0,8,4"/>
+                        <Button Content="Leave" Style="{StaticResource GhostBtn}" Click="OnYtLeave" Margin="0,0,8,4"/>
+                        <Button Content="Archive only" Style="{StaticResource GhostBtn}" Click="OnYtArchive" Margin="0,0,8,4"/>
+                    </WrapPanel>
+                    <TextBlock Text="*FreeTube still uses YouTube’s catalog. We label that honestly." Foreground="{StaticResource Warn}" FontSize="12" Margin="8,4,0,0"/>
+                </StackPanel>
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl x:Name="PlanList">
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter" BasedOn="{StaticResource FadeRowPresenter}"/>
+                        </ItemsControl.ItemContainerStyle>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBorder}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox IsChecked="{Binding Selected, Mode=TwoWay}" VerticalAlignment="Top" Margin="0,4,12,0"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock FontSize="16" FontWeight="SemiBold" Text="{Binding Def.GoogleName}"/>
+                                            <TextBlock Margin="0,4,0,0">
+                                                <Run Text="→ "/>
+                                                <Run Text="{Binding Destination.Name, Mode=OneWay}"/>
+                                                <Run Text="  ·  "/>
+                                                <Run Text="{Binding LevelLabel, Mode=OneWay}"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Def.How}" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8"/>
+                                            <ProgressBar Height="6" Minimum="0" Maximum="1" Value="{Binding Progress, Mode=OneWay}"/>
+                                            <TextBlock Text="{Binding StatusLabel}" Foreground="{StaticResource Accent}" Margin="0,6,0,0"/>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="2" Width="160">
+                                            <Button Content="Open destination" Style="{StaticResource PrimaryBtn}" Tag="{Binding}" Click="OnOpenDestination" Margin="0,0,0,6"/>
+                                            <Button Content="Mark imported" Style="{StaticResource GhostBtn}" Tag="{Binding}" Click="OnMarkImported" Margin="0,0,0,6"/>
+                                            <Button Content="Verified — safe later" Style="{StaticResource GhostBtn}" Tag="{Binding}" Click="OnMarkVerified"/>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <Grid x:Name="PagePc" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <DockPanel Margin="0,0,0,14">
+                    <Button DockPanel.Dock="Right" Content="Scan again" Style="{StaticResource PrimaryBtn}" Click="OnScan"/>
+                    <Button DockPanel.Dock="Right" Content="Default apps" Style="{StaticResource GhostBtn}" Click="OnOpenDefaultApps" Margin="0,0,8,0"/>
+                    <StackPanel>
+                        <TextBlock Text="This PC" FontSize="26" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="PcSubtitle" Text="Installed Google software on this machine." Foreground="{StaticResource Muted}" Margin="0,6,0,0"/>
+                    </StackPanel>
+                </DockPanel>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Folders &amp; scheduled tasks" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="FolderText" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                <TextBlock x:Name="TaskText" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <ItemsControl x:Name="AppList">
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter" BasedOn="{StaticResource FadeRowPresenter}"/>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource CardBorder}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold"/>
+                                                <TextBlock Foreground="{StaticResource Muted}" Margin="0,4,0,0">
+                                                    <Run Text="{Binding Publisher, Mode=OneWay}"/>
+                                                    <Run Text=" · "/>
+                                                    <Run Text="{Binding Version, Mode=OneWay}"/>
+                                                    <Run Text=" · "/>
+                                                    <Run Text="{Binding Scope, Mode=OneWay}"/>
+                                                </TextBlock>
+                                                <TextBlock Text="{Binding Replacement, StringFormat=Replace with: {0}}" Foreground="{StaticResource Accent}" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <Button Content="Open alternative" Style="{StaticResource GhostBtn}" Tag="{Binding}" Click="OnOpenReplacement" Margin="0,0,0,8" HorizontalAlignment="Stretch"/>
+                                                <Button Content="Uninstall…" Style="{StaticResource DangerBtn}" Tag="{Binding}" Click="OnUninstall" HorizontalAlignment="Stretch"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock x:Name="EmptyScan" Text="No Google desktop apps found in Add/Remove Programs. You can still use the guide for Gmail, Photos, Android, and the rest." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Visibility="Collapsed" Margin="4,8,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <Grid x:Name="PageGuide" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Margin="0,0,0,14">
+                    <TextBlock Text="De-Google guide" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock Text="Work top to bottom. Check an item when it is done — progress stays on this PC." Foreground="{StaticResource Muted}" Margin="0,6,0,0"/>
+                </StackPanel>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="GuideList">
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter" BasedOn="{StaticResource FadeRowPresenter}"/>
+                        </ItemsControl.ItemContainerStyle>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBorder}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox IsChecked="{Binding IsDone, Mode=TwoWay}" VerticalAlignment="Top" Margin="0,2,12,0"/>
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{Binding Category}" Foreground="{StaticResource Accent}" FontSize="12" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="SemiBold" Margin="0,2,0,0"/>
+                                            <TextBlock Text="{Binding Why}" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                                            <ItemsControl ItemsSource="{Binding Alternatives}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel/>
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Button Style="{StaticResource GhostBtn}" Margin="0,0,8,8" Tag="{Binding Url}" Click="OnOpenUrl" ToolTip="{Binding Note}">
+                                                            <TextBlock>
+                                                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                                                            </TextBlock>
+                                                        </Button>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <Grid x:Name="PageCoach" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <StackPanel Margin="0,0,0,12">
+                    <TextBlock Text="AI Coach" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock Text="Real AI uses *your* key or a local OpenAI-compatible server. Claude, ChatGPT, Groq, OpenRouter, OpenCode, Mistral, DeepSeek, Grok, Together, Fireworks, Cerebras, Venice, Perplexity, plus Ollama / OpenClaw / LM Studio. Google Gemini is blocked. Offline answers work with no key. Hosted DeGoogle AI (we pay) is Cloud Pass and not live yet." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                    <WrapPanel>
+                        <Button Content="Write my plan" Style="{StaticResource PrimaryBtn}" Click="OnLocalPlan" Margin="0,0,8,8"/>
+                        <Button Content="Add or change API key" Style="{StaticResource GhostBtn}" Click="OnSetupAi" Margin="0,0,8,8"/>
+                        <ComboBox x:Name="AiProviderBox" Width="280" Margin="0,0,8,8" SelectionChanged="OnAiProviderChanged"/>
+                        <TextBox x:Name="AiModelBox" Width="200" Margin="0,0,8,8" ToolTip="Model id for this provider. Leave the default unless you know a better one."/>
+                        <TextBox x:Name="AiBaseUrlBox" Width="280" Margin="0,0,8,8" Visibility="Collapsed"
+                                 ToolTip="OpenAI-compatible base URL, e.g. http://127.0.0.1:11434/v1"/>
+                        <TextBox x:Name="ApiKeyBox" Width="200" Margin="0,0,8,8" ToolTip="API key is encrypted with Windows DPAPI for this user only."/>
+                        <Button Content="Save key" Style="{StaticResource GhostBtn}" Click="OnSaveApiKey" Margin="0,0,8,8"/>
+                        <Button Content="Get a key" Style="{StaticResource GhostBtn}" Click="OnOpenAiKeyClick" Margin="0,0,8,8"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="AiProviderHint" Foreground="{StaticResource Accent}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,6" Cursor="Hand" MouseLeftButtonUp="OnOpenAiKeyPage"/>
+                    <CheckBox x:Name="CloudAiConsentBox" Content="I consent to sending my question and a local scan summary to the provider I chose (not Google). I can withdraw this anytime." Click="OnCloudConsent" Margin="0,4,0,0"/>
+                </StackPanel>
+                <ListBox x:Name="ChatList" Grid.Row="1" Margin="0,0,0,10" ItemContainerStyle="{StaticResource FadeRowItem}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Role}" FontWeight="SemiBold" Foreground="{StaticResource Accent}"/>
+                                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <TextBlock x:Name="AiTyping" Grid.Row="1" VerticalAlignment="Bottom" Margin="8,0,8,14"
+                           Text="Thinking…" Foreground="{StaticResource Accent}" FontWeight="SemiBold"
+                           Visibility="Collapsed" IsHitTestVisible="False"/>
+                <DockPanel Grid.Row="2">
+                    <Button DockPanel.Dock="Right" Content="Offline answer" Style="{StaticResource GhostBtn}" Click="OnAskOffline" Margin="8,0,0,0"/>
+                    <Button DockPanel.Dock="Right" Content="Ask DeGoogle AI" Style="{StaticResource GhostBtn}" Click="OnAskHosted" Margin="8,0,0,0"/>
+                    <Button DockPanel.Dock="Right" Content="Ask AI" Style="{StaticResource PrimaryBtn}" Click="OnAskCloud" Margin="8,0,0,0"/>
+                    <TextBox x:Name="ChatInput" Height="36" VerticalContentAlignment="Center"/>
+                </DockPanel>
+            </Grid>
+
+            <Grid x:Name="PageGdpr" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Margin="0,0,0,12">
+                    <TextBlock Text="Your rights vs Google" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock Text="These are your GDPR rights against Google, not against this app. Templates copy to the clipboard. Free — you should not pay to exercise legal rights." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Copy access / Takeout request" Style="{StaticResource GhostBtn}" Click="OnCopyAccess" Margin="0,0,8,0"/>
+                        <Button Content="Copy erasure request" Style="{StaticResource DangerBtn}" Click="OnCopyErasure"/>
+                    </StackPanel>
+                </StackPanel>
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl x:Name="GdprList">
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter" BasedOn="{StaticResource FadeRowPresenter}"/>
+                        </ItemsControl.ItemContainerStyle>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBorder}">
+                                    <StackPanel>
+                                        <TextBlock Foreground="{StaticResource Accent}" FontWeight="SemiBold">
+                                            <Run Text="{Binding Article, Mode=OneWay}"/>
+                                            <Run Text=" — "/>
+                                            <Run Text="{Binding Title, Mode=OneWay}"/>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding WhatItMeans}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                        <TextBlock Text="{Binding HowToUse}" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                                        <Button Content="Open official page" Style="{StaticResource GhostBtn}" HorizontalAlignment="Left" Tag="{Binding Url}" Click="OnOpenUrl"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+
+            <Grid x:Name="PageNetwork" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="Network" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock Text="Google DNS (8.8.8.8) still sees which hostnames you resolve. Changing DNS needs Windows admin approval and is reversible." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,16"/>
+                    <Border Style="{StaticResource CardBorder}">
+                        <StackPanel>
+                            <TextBlock Text="Current DNS" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="DnsText" Margin="0,8,0,0" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="DnsWarn" Foreground="{StaticResource Warn}" Margin="0,8,0,12" TextWrapping="Wrap"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Use Quad9 (Pro lifetime)" Style="{StaticResource PrimaryBtn}" Click="OnApplyDns" Margin="0,0,8,0"/>
+                                <Button Content="Restore previous DNS" Style="{StaticResource GhostBtn}" Click="OnRestoreDns"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Grid>
+
+            <Grid x:Name="PageTakeout" Visibility="Collapsed">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Margin="0,0,0,12">
+                    <TextBlock Text="Drop your Google Takeout" FontSize="26" FontWeight="SemiBold"/>
+                    <TextBlock Text="Exporting from Google does not delete anything. We parse the archive on this PC. We will never tell you to disconnect Google until destination counts are verified." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Request Takeout (Google)" Style="{StaticResource GhostBtn}" Click="OnOpenGoogleTakeout" Margin="0,0,8,0"/>
+                        <Button Content="Choose folder" Style="{StaticResource GhostBtn}" Click="OnPickTakeoutFolder" Margin="0,0,8,0"/>
+                        <Button Content="Choose .zip" Style="{StaticResource GhostBtn}" Click="OnPickTakeoutZip" Margin="0,0,8,0"/>
+                        <Button Content="Convert locally" Style="{StaticResource PrimaryBtn}" Click="OnNormalizeTakeout" Margin="0,0,8,0"/>
+                        <Button Content="HTML report (Pro lifetime)" Style="{StaticResource GhostBtn}" Click="OnSaveReport"/>
+                    </StackPanel>
+                </StackPanel>
+                <Border x:Name="TakeoutDrop" Grid.Row="1" Style="{StaticResource DropZone}" MinHeight="96" AllowDrop="True" MouseLeftButtonUp="OnTakeoutHintClick">
+                    <TextBlock x:Name="TakeoutDropHint" Text="Drop takeout-….zip here, or click to pick a file. Reading happens locally." TextAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" Margin="16"/>
+                </Border>
+                <ScrollViewer Grid.Row="2" Margin="0,12,0,0">
+                    <StackPanel>
+                        <TextBlock x:Name="TakeoutSummary" TextWrapping="Wrap" FontSize="16" Margin="0,0,0,12"/>
+                        <TextBlock x:Name="PasswordWarn" Foreground="{StaticResource Danger}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+                        <ItemsControl x:Name="TakeoutList">
+                            <ItemsControl.ItemContainerStyle>
+                                <Style TargetType="ContentPresenter" BasedOn="{StaticResource FadeRowPresenter}"/>
+                            </ItemsControl.ItemContainerStyle>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource CardBorder}">
+                                        <StackPanel>
+                                            <TextBlock FontWeight="SemiBold">
+                                                <Run Text="{Binding Name, Mode=OneWay}"/>
+                                                <Run Text="  "/>
+                                                <Run Text="{Binding SizeLabel, Mode=OneWay}" Foreground="{StaticResource Muted}"/>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Hint}" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <Grid x:Name="PagePro" Visibility="Collapsed">
+                <ScrollViewer>
+                    <StackPanel>
+                        <TextBlock Text="Plans &amp; pricing" FontSize="26" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="ProStatus" Margin="0,6,0,16" Foreground="{StaticResource Accent}"/>
+                        <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Free forever" FontWeight="SemiBold"/>
+                                <TextBlock Text="The whole de-Google path: scan this PC, Your plan (Easy / Privacy / Own), Takeout parse and local converters, catalog, uninstall launcher, GDPR templates vs Google, local AI coach, permissions, export/erase your data. You do not pay to leave Google or to use your legal rights." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="ProLifetimeCard" Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Lifetime Pro — €19 once (family €39, up to 3 PCs)" FontWeight="SemiBold"/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
+                                    One payment. No monthly fee. Quad9 DNS switch with restore and HTML report. Real AI with your own key (Claude, ChatGPT, Groq, OpenRouter, OpenCode, and more) is free for everyone — you pay that company. 14-day trial, no card stored here.
+                                </TextBlock>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout is not live yet. Use the trial or a signed key. When payments ship: EU invoices, no Google Pay requirement, no dark patterns."/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Start 14-day trial" Style="{StaticResource PrimaryBtn}" Click="OnStartTrial" Margin="0,0,8,0"/>
+                                    <Button Content="Issue lifetime builder key" Style="{StaticResource GhostBtn}" Click="OnBuilderKey"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Cloud Pass — €4.99/month or €39/year" FontWeight="SemiBold"/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
+                                    Only for features that cost us money to run. Today that is hosted DeGoogle AI (we pay the model). Your own API key or a local compatible endpoint is free. Cloud Pass is not billed until hosted AI is actually on.
+                                </TextBlock>
+                                <Button Content="Issue 1-year Cloud Pass builder key" Style="{StaticResource GhostBtn}" Click="OnCloudPassKey" HorizontalAlignment="Left" Margin="0,0,0,12"/>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Activate key" Style="{StaticResource GhostBtn}" Click="OnActivateKey" Margin="8,0,0,0"/>
+                                    <TextBox x:Name="LicenseBox"/>
+                                </DockPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <Grid x:Name="PagePrivacy" Visibility="Collapsed">
+                <ScrollViewer>
+                    <StackPanel>
+                        <TextBlock Text="Privacy &amp; this app" FontSize="26" FontWeight="SemiBold"/>
+                        <TextBlock Text="This is DeGoogle Kit’s own GDPR panel: what we store, how to export it, how to erase it." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,16"/>
+                        <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Permissions on this PC" FontWeight="SemiBold"/>
+                                <TextBlock Text="Remembered allows skip the dialog. Uncheck to revoke. Changes (uninstall, DNS, erase, install update, cloud AI) always ask." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                                <CheckBox x:Name="PermScan" Content="Read-only PC scan (programs, browser, folders, DNS)" Click="OnPermissionToggle" Margin="0,0,0,6"/>
+                                <CheckBox x:Name="PermLinks" Content="Open websites, Settings, and folders I click" Click="OnPermissionToggle" Margin="0,0,0,6"/>
+                                <CheckBox x:Name="PermClipboard" Content="Write to the clipboard" Click="OnPermissionToggle" Margin="0,0,0,6"/>
+                                <CheckBox x:Name="PermUpdates" Content="Check the cloud update feed when I ask" Click="OnPermissionToggle" Margin="0,0,0,6"/>
+                                <CheckBox x:Name="PermTakeout" Content="Read Takeout zips/folders I choose" Click="OnPermissionToggle" Margin="0,0,0,6"/>
+                                <CheckBox x:Name="PermExport" Content="Write export/report files to the Desktop" Click="OnPermissionToggle" Margin="0,0,0,6"/>
+                                <CheckBox x:Name="PermSecrets" Content="Store API keys for this Windows user (DPAPI)" Click="OnPermissionToggle"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Cloud updates" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="UpdateStatusText" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                                <TextBlock Text="Feed URL (HTTPS, GitHub Releases latest.json). Leave blank to use the default." Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,0,6"/>
+                                <DockPanel Margin="0,0,0,10">
+                                    <Button DockPanel.Dock="Right" Content="Save feed" Style="{StaticResource GhostBtn}" Click="OnSaveFeed" Margin="8,0,0,0"/>
+                                    <TextBox x:Name="UpdateFeedBox"/>
+                                </DockPanel>
+                                <Button Content="Check for updates" Style="{StaticResource PrimaryBtn}" Click="OnCheckUpdates" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBorder}">
+                            <TextBlock x:Name="DataMapText" TextWrapping="Wrap"/>
+                        </Border>
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
+                            <Button Content="Export my data (zip)" Style="{StaticResource PrimaryBtn}" Click="OnExportData" Margin="0,0,8,0"/>
+                            <Button Content="Delete all local data" Style="{StaticResource DangerBtn}" Click="OnDeleteData"/>
+                        </StackPanel>
+                        <TextBlock Text="Action log" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                        <ItemsControl x:Name="AuditList">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Margin="0,0,0,4">
+                                        <Run Text="{Binding Label, Mode=OneWay}"/>
+                                        <Run Text="  "/>
+                                        <Run Text="{Binding Detail, Mode=OneWay}" Foreground="{StaticResource Muted}"/>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>
