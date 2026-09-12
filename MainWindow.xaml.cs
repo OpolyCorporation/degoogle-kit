@@ -808,41 +808,44 @@ public partial class MainWindow : Window
         MessageBox.Show("Lifetime Pro extras are on for 14 days. No card was stored.", "Trial");
     }
 
-    private void OnBuilderKey(object sender, RoutedEventArgs e)
+    private void OnBuyLifetime(object sender, RoutedEventArgs e)
     {
-        if (!AskAccess.For(this, AccessKind.ChangeLicense,
-                "Create a Lifetime Pro builder key on this PC?"))
-            return;
-        var key = LicenseService.IssueLifetimeKey();
-        LicenseBox.Text = key;
-        var copied = AskAccess.For(this, AccessKind.Clipboard, "Copy the builder key to the clipboard?");
-        if (copied) Clipboard.SetText(key);
-        MessageBox.Show(
-            copied
-                ? "A Lifetime Pro builder key is in the box and on the clipboard. Activate it below."
-                : "A Lifetime Pro builder key is in the box. Activate it below.",
-            "Builder key");
+        if (!TryOpenUri(StripeStore.LifetimePaymentLink)) return;
+        MessageBox.Show(StripeStore.AfterCheckoutHint, "Stripe");
     }
 
-    private void OnCloudPassKey(object sender, RoutedEventArgs e)
+    private void OnBuyFamily(object sender, RoutedEventArgs e)
     {
-        if (!AskAccess.For(this, AccessKind.ChangeLicense,
-                "Create a 1-year Cloud Pass builder key on this PC?"))
-            return;
-        var key = LicenseService.IssueCloudKey(DateTime.Today.AddYears(1));
-        LicenseBox.Text = key;
-        if (AskAccess.For(this, AccessKind.Clipboard, "Copy the Cloud Pass key to the clipboard?"))
-            Clipboard.SetText(key);
-        MessageBox.Show("A 1-year Cloud Pass builder key is in the box. Activate it below. Hosted AI is not billed until it actually runs.", "Cloud Pass");
+        if (!TryOpenUri(StripeStore.FamilyPaymentLink)) return;
+        MessageBox.Show(StripeStore.AfterCheckoutHint, "Stripe");
     }
 
-    private void OnActivateKey(object sender, RoutedEventArgs e)
+    private async void OnActivateKey(object sender, RoutedEventArgs e)
     {
-        if (!AskAccess.For(this, AccessKind.ChangeLicense, "Activate this Pro key on this PC?"))
-            return;
-        if (!LicenseService.Activate(LicenseBox.Text))
+        var raw = LicenseBox.Text.Trim();
+        if (raw.Length == 0)
         {
-            MessageBox.Show("That key is invalid or expired.", "License");
+            MessageBox.Show("Paste a Stripe session id (cs_…) or a DGK2 license key.", "License");
+            return;
+        }
+        if (!AskAccess.For(this, AccessKind.ChangeLicense, "Activate a paid or trial license on this PC?"))
+            return;
+
+        if (raw.StartsWith("cs_", StringComparison.OrdinalIgnoreCase))
+        {
+            var result = await LicenseClient.ExchangeSessionAsync(raw);
+            if (!result.Ok || string.IsNullOrWhiteSpace(result.Key))
+            {
+                MessageBox.Show(result.Message, "License");
+                return;
+            }
+            raw = result.Key;
+            LicenseBox.Text = raw;
+        }
+
+        if (!LicenseService.Activate(raw))
+        {
+            MessageBox.Show("That key is invalid. Paid licenses are signed DGK2 keys from Stripe. Debug builder keys only work in Debug builds.", "License");
             return;
         }
         RefreshLicenseUi();

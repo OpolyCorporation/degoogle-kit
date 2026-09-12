@@ -484,26 +484,26 @@
                             <StackPanel>
                                 <TextBlock Text="Lifetime Pro — €19 once (family €39, up to 3 PCs)" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
-                                    One payment. No monthly fee. Quad9 DNS switch with restore and HTML report. Real AI with your own key (Claude, ChatGPT, Groq, OpenRouter, OpenCode, and more) is free for everyone — you pay that company. 14-day trial, no card stored here.
+                                    Pay with Stripe Checkout in your browser. We never see your card. Google Pay is not required. After payment, paste the Checkout session id (starts with cs_) below — or paste a signed DGK2 license key.
                                 </TextBlock>
-                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout is not live yet. Use the trial or a signed key. When payments ship: EU invoices, no Google Pay requirement, no dark patterns."/>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button Content="Start 14-day trial" Style="{StaticResource PrimaryBtn}" Click="OnStartTrial" Margin="0,0,8,0"/>
-                                    <Button Content="Issue lifetime builder key" Style="{StaticResource GhostBtn}" Click="OnBuilderKey"/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout opens Stripe in your browser. Cards never touch this app. Cloud Pass is not billed until hosted AI actually runs. EU VAT: add a Stripe Tax registration before turning automatic tax on."/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Button Content="Buy Lifetime €19" Style="{StaticResource PrimaryBtn}" Click="OnBuyLifetime" Margin="0,0,8,0"/>
+                                    <Button Content="Buy Family €39" Style="{StaticResource GhostBtn}" Click="OnBuyFamily" Margin="0,0,8,0"/>
+                                    <Button Content="Start 14-day trial" Style="{StaticResource GhostBtn}" Click="OnStartTrial"/>
                                 </StackPanel>
+                                <DockPanel>
+                                    <Button DockPanel.Dock="Right" Content="Activate after payment" Style="{StaticResource PrimaryBtn}" Click="OnActivateKey" Margin="8,0,0,0"/>
+                                    <TextBox x:Name="LicenseBox" ToolTip="Paste cs_… from Stripe or a DGK2 license key."/>
+                                </DockPanel>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource CardBorder}">
                             <StackPanel>
                                 <TextBlock Text="Cloud Pass — €4.99/month or €39/year" FontWeight="SemiBold"/>
-                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
-                                    Only for features that cost us money to run. Today that is hosted DeGoogle AI (we pay the model). Your own API key or a local compatible endpoint is free. Cloud Pass is not billed until hosted AI is actually on.
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0">
+                                    Stripe catalog placeholders exist, but we will not charge Cloud Pass until hosted DeGoogle AI is actually running.
                                 </TextBlock>
-                                <Button Content="Issue 1-year Cloud Pass builder key" Style="{StaticResource GhostBtn}" Click="OnCloudPassKey" HorizontalAlignment="Left" Margin="0,0,0,12"/>
-                                <DockPanel>
-                                    <Button DockPanel.Dock="Right" Content="Activate key" Style="{StaticResource GhostBtn}" Click="OnActivateKey" Margin="8,0,0,0"/>
-                                    <TextBox x:Name="LicenseBox"/>
-                                </DockPanel>
                             </StackPanel>
                         </Border>
                     </StackPanel>

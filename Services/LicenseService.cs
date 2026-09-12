@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using DeGoogleKit.Licensing;
 
 namespace DeGoogleKit.Services;
 
@@ -9,6 +10,7 @@ public sealed class LicenseRecord
     public bool Lifetime { get; set; }
     public DateTime? TrialEnds { get; set; }
     public string Key { get; set; } = "";
+    public int Seats { get; set; } = 1;
     public DateTime? KeyExpires { get; set; }
     public DateTime? CloudPassEnds { get; set; }
 }
@@ -53,7 +55,7 @@ public static class LicenseService
             var parts = new List<string>();
             var r = Record;
             if (r.Lifetime && r.Plan.Equals("Pro", StringComparison.OrdinalIgnoreCase))
-                parts.Add("Pro lifetime");
+                parts.Add(r.Seats > 1 ? $"Pro family ({r.Seats} PCs)" : "Pro lifetime");
             else if (r.Plan.Equals("Pro", StringComparison.OrdinalIgnoreCase) && r.KeyExpires is { } exp && exp > DateTime.Now)
                 parts.Add($"Pro — until {exp:d}");
             else if (r.Plan.Equals("Trial", StringComparison.OrdinalIgnoreCase) && r.TrialEnds is { } t && t > DateTime.Now)
@@ -80,15 +82,39 @@ public static class LicenseService
 
     public static bool Activate(string key)
     {
+        key = (key ?? "").Trim();
+        if (LicenseTicket.TryVerify(key, out var payload))
+        {
+            var paid = Record;
+            paid.Key = key;
+            if (LicenseTicket.IsPaidPro(payload))
+            {
+                paid.Plan = "Pro";
+                paid.Lifetime = true;
+                paid.Seats = Math.Max(1, payload.Seats);
+                paid.KeyExpires = null;
+                PrivacyStore.Log("license_activated", payload.Sku + " " + payload.Sid);
+            }
+            else if (LicenseTicket.IsCloud(payload))
+            {
+                paid.CloudPassEnds = DateTime.Today.AddYears(1);
+                PrivacyStore.Log("cloud_pass_activated", payload.Sid);
+            }
+            else return false;
+            JsonFile.Save(AppPaths.License, paid);
+            return true;
+        }
+
+#if DEBUG
         if (!TryParse(key, out var kind, out var expires)) return false;
         var r = Record;
-        r.Key = key.Trim().ToUpperInvariant();
+        r.Key = key.ToUpperInvariant();
         if (kind == "lifetime")
         {
             r.Plan = "Pro";
             r.Lifetime = true;
             r.KeyExpires = null;
-            PrivacyStore.Log("license_activated", "lifetime");
+            PrivacyStore.Log("license_activated", "legacy-lifetime");
         }
         else if (kind == "cloud")
         {
@@ -104,6 +130,9 @@ public static class LicenseService
         }
         JsonFile.Save(AppPaths.License, r);
         return true;
+#else
+        return false;
+#endif
     }
 
     public static string IssueLifetimeKey() =>

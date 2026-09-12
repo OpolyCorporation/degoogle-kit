@@ -16,9 +16,21 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Licensing\**" />
+    <Compile Remove="license-api\**" />
+    <None Remove="Licensing\**" />
+    <None Remove="license-api\**" />
+    <EmbeddedResource Remove="Licensing\**" />
+    <EmbeddedResource Remove="license-api\**" />
+    <Page Remove="Licensing\**" />
+    <Page Remove="license-api\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Assets\brand.png" />
     <Resource Include="Assets\app.ico" />
     <Content Include="updates\feed.url" CopyToOutputDirectory="PreserveNewest" />
+    <ProjectReference Include="Licensing\DeGoogleKit.Licensing.csproj" />
   </ItemGroup>
 
 </Project>

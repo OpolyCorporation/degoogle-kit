@@ -41,7 +41,7 @@
                         <Run Text="Permissions: the app asks before it scans this PC, opens a site, uses the clipboard, checks for updates, reads Takeout, writes files, stores keys, uninstalls, changes DNS, or sends Cloud AI. You can revoke remembered allows in Privacy."/><LineBreak/><LineBreak/>
                         <Run Text="Your rights: access, portability, and erasure are in the Privacy tab (export zip or delete all local data). You can withdraw Cloud AI consent anytime."/><LineBreak/><LineBreak/>
                         <Run Text="Children: not directed at children under 16 without a guardian."/><LineBreak/><LineBreak/>
-                        <Run Text="Paid features: Lifetime Pro is a one-time license. Cloud Pass is a subscription only if we run hosted AI (we pay the model). Trial and keys stay on this PC. We do not store card numbers. Future card payments would use a PCI-compliant provider (for example Stripe), never Google Pay as the core processor."/><LineBreak/><LineBreak/>
+                        <Run Text="Paid features: Lifetime Pro is a one-time Stripe Checkout license. Cloud Pass is a subscription only if we run hosted AI (we pay the model). Trial and keys stay on this PC. We do not store card numbers. Payments go through Stripe Checkout, never Google Pay as the core processor."/><LineBreak/><LineBreak/>
                         <Run Text="Complaints: Datatilsynet (Denmark) https://www.datatilsynet.dk/"/>
                     </TextBlock>
                 </Border>

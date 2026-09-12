@@ -22,6 +22,7 @@ public sealed class AppSettings
     public string AiBaseUrl { get; set; } = "";
     public string ProtectedApiKey { get; set; } = "";
     public string UpdateFeedUrl { get; set; } = "";
+    public string LicenseApiUrl { get; set; } = "";
 }
 
 public static class PrivacyStore
