@@ -17,6 +17,7 @@ public enum AccessKind
     EraseAppData,
     InstallUpdate,
     CloudAiSend,
+    HostedAiSend,
     ChangeLicense,
     AccountCloud,
     DeleteAccount
@@ -31,6 +32,7 @@ public sealed class PermissionGrants
     public bool? TakeoutRead { get; set; }
     public bool? DesktopExport { get; set; }
     public bool? StoreSecrets { get; set; }
+    public bool? CloudAi { get; set; }
     public bool? AccountCloud { get; set; }
 }
 
@@ -58,6 +60,9 @@ public static class PermissionService
             case AccessKind.TakeoutRead: g.TakeoutRead = allowed; break;
             case AccessKind.DesktopExport: g.DesktopExport = allowed; break;
             case AccessKind.StoreSecret: g.StoreSecrets = allowed; break;
+            case AccessKind.CloudAiSend:
+            case AccessKind.HostedAiSend:
+                g.CloudAi = allowed; break;
             case AccessKind.AccountCloud:
                 g.AccountCloud = allowed;
                 SessionAccountCloud = allowed;
@@ -76,6 +81,7 @@ public static class PermissionService
         AccessKind.TakeoutRead => Grants.TakeoutRead,
         AccessKind.DesktopExport => Grants.DesktopExport,
         AccessKind.StoreSecret => Grants.StoreSecrets,
+        AccessKind.CloudAiSend or AccessKind.HostedAiSend => Grants.CloudAi,
         AccessKind.AccountCloud => Grants.AccountCloud,
         _ => null
     };
@@ -189,7 +195,14 @@ public static class PermissionService
             extra ?? "Send your question and a local scan summary to the provider you chose (not Google)?",
             "The internet, using your own API key. The provider’s servers will receive the question and a summary of this PC’s scan/guide.",
             "A network request leaves this PC. Withdraw consent anytime on the Coach tab.",
-            Rememberable: false,
+            Rememberable: true,
+            ChangesSystem: false),
+        AccessKind.HostedAiSend => new(
+            "Send a question to DeGoogle AI",
+            extra ?? "Send your question and a local scan summary to our license server, then Groq GPT-OSS 120B? Never Google. Cloud Pass required.",
+            "Our license server (HTTPS), then Groq in the US. We pay Groq. The Groq key never sits in this app. We do not log the question.",
+            "A network request leaves this PC. Withdraw consent anytime on the Coach tab.",
+            Rememberable: true,
             ChangesSystem: false),
         AccessKind.ChangeLicense => new(
             "Change Pro / trial status",

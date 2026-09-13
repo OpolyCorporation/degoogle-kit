@@ -332,8 +332,8 @@
                     <Button DockPanel.Dock="Right" Content="Write my plan" Style="{StaticResource PrimaryBtn}" Click="OnLocalPlan" VerticalAlignment="Top"/>
                     <StackPanel Margin="0,0,12,0">
                         <TextBlock Text="AI Coach" FontSize="26" FontWeight="SemiBold"/>
-                        <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"
-                                   Text="Your key, your provider — never Gemini. Offline answers work with no key. Hosted DeGoogle AI is Cloud Pass and not live yet."/>
+                        <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8"
+                                   Text="This coach is for leaving Google (mail, photos, Chrome, Takeout, phone, GDPR). It can answer related privacy questions. It is not a general everyday AI — don’t use it as ChatGPT."/>
                     </StackPanel>
                 </DockPanel>
 
@@ -343,44 +343,54 @@
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10" Padding="16">
-                        <StackPanel>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="12"/>
-                                    <ColumnDefinition Width="0.72*"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <TextBlock Text="Provider" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
-                                <TextBlock Grid.Column="2" Text="Model" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
-                                <ComboBox x:Name="AiProviderBox" Grid.Row="1" MinHeight="38" SelectionChanged="OnAiProviderChanged"/>
-                                <TextBox x:Name="AiModelBox" Grid.Row="1" Grid.Column="2" Height="38" VerticalContentAlignment="Center"
-                                         ToolTip="Model id for this provider. Leave the default unless you know a better one."/>
-                            </Grid>
-                            <TextBlock x:Name="EndpointLabel" Text="Local endpoint" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,12,0,6" Visibility="Collapsed"/>
-                            <TextBox x:Name="AiBaseUrlBox" Height="38" VerticalContentAlignment="Center" Margin="0,0,0,0" Visibility="Collapsed"
-                                     ToolTip="OpenAI-compatible base URL, e.g. http://127.0.0.1:11434/v1"/>
-                            <TextBlock Text="API key" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,12,0,6"/>
-                            <DockPanel LastChildFill="True">
-                                <Button DockPanel.Dock="Right" Content="Get a key" Style="{StaticResource GhostBtn}" Click="OnOpenAiKeyClick" Margin="8,0,0,0" Padding="14,8"/>
-                                <Button DockPanel.Dock="Right" Content="Save key" Style="{StaticResource GhostBtn}" Click="OnSaveApiKey" Margin="8,0,0,0" Padding="14,8"/>
-                                <Grid>
-                                    <PasswordBox x:Name="ApiKeyBox" Height="38" VerticalContentAlignment="Center" PasswordChanged="OnApiKeyChanged"
-                                                 ToolTip="Encrypted with Windows DPAPI for this user only. Never sent to us or to Google by Save."/>
-                                    <TextBlock x:Name="ApiKeyWatermark" Text="Paste key — stored only on this PC" Foreground="{StaticResource Muted}"
-                                               IsHitTestVisible="False" VerticalAlignment="Center" Margin="14,0,0,0"/>
-                                </Grid>
-                            </DockPanel>
-                            <TextBlock x:Name="AiProviderHint" Foreground="{StaticResource Accent}" TextWrapping="Wrap" FontSize="12.5" Margin="0,10,0,0" Cursor="Hand" MouseLeftButtonUp="OnOpenAiKeyPage"/>
-                            <CheckBox x:Name="CloudAiConsentBox" Click="OnCloudConsent" Margin="0,12,0,0">
-                                <TextBlock TextWrapping="Wrap" Text="I consent to sending my question and a local scan summary to this provider (not Google). I can withdraw this anytime."/>
-                            </CheckBox>
-                        </StackPanel>
-                    </Border>
+                    <Expander x:Name="AiConnectExpander" Margin="0,0,0,10" IsExpanded="True">
+                        <Expander.Header>
+                            <TextBlock x:Name="AiConnectHeader" TextWrapping="Wrap"
+                                       Text="Connect Groq once — Get a key, paste it, tick consent, then chat"/>
+                        </Expander.Header>
+                        <Border Style="{StaticResource CardBorder}" Margin="0,8,0,0" Padding="16">
+                            <StackPanel>
+                                <TextBlock Text="Groq API key" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                                <DockPanel LastChildFill="True">
+                                    <Button DockPanel.Dock="Right" Content="Get a key" Style="{StaticResource GhostBtn}" Click="OnOpenAiKeyClick" Margin="8,0,0,0" Padding="14,8"/>
+                                    <Button DockPanel.Dock="Right" Content="Save key" Style="{StaticResource GhostBtn}" Click="OnSaveApiKey" Margin="8,0,0,0" Padding="14,8"/>
+                                    <Grid>
+                                        <PasswordBox x:Name="ApiKeyBox" Height="38" VerticalContentAlignment="Center" PasswordChanged="OnApiKeyChanged"
+                                                     ToolTip="Encrypted with Windows DPAPI for this user only. Never sent to us or to Google by Save."/>
+                                        <TextBlock x:Name="ApiKeyWatermark" Text="Paste gsk_… key — stored only on this PC" Foreground="{StaticResource Muted}"
+                                                   IsHitTestVisible="False" VerticalAlignment="Center" Margin="14,0,0,0"/>
+                                    </Grid>
+                                </DockPanel>
+                                <TextBlock x:Name="AiProviderHint" Foreground="{StaticResource Accent}" TextWrapping="Wrap" FontSize="12.5" Margin="0,10,0,0" Cursor="Hand" MouseLeftButtonUp="OnOpenAiKeyPage"/>
+                                <CheckBox x:Name="CloudAiConsentBox" Click="OnCloudConsent" Margin="0,12,0,0">
+                                    <TextBlock TextWrapping="Wrap" Text="I consent to sending my question and a local scan summary to Groq (or the provider under Advanced). Never Google. I can withdraw this anytime."/>
+                                </CheckBox>
+                                <Expander Header="Advanced — other providers / model" Margin="0,12,0,0">
+                                    <StackPanel Margin="0,10,0,0">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="12"/>
+                                                <ColumnDefinition Width="0.72*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Text="Provider" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                                            <TextBlock Grid.Column="2" Text="Model" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                                            <ComboBox x:Name="AiProviderBox" Grid.Row="1" MinHeight="38" SelectionChanged="OnAiProviderChanged"/>
+                                            <TextBox x:Name="AiModelBox" Grid.Row="1" Grid.Column="2" Height="38" VerticalContentAlignment="Center"
+                                                     ToolTip="Leave blank unless you know a Groq model id. Wrong ids 404."/>
+                                        </Grid>
+                                        <TextBlock x:Name="EndpointLabel" Text="Local endpoint" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,12,0,6" Visibility="Collapsed"/>
+                                        <TextBox x:Name="AiBaseUrlBox" Height="38" VerticalContentAlignment="Center" Visibility="Collapsed"
+                                                 ToolTip="OpenAI-compatible base URL, e.g. http://127.0.0.1:11434/v1"/>
+                                    </StackPanel>
+                                </Expander>
+                            </StackPanel>
+                        </Border>
+                    </Expander>
 
                     <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0" Padding="8">
                         <Grid>
@@ -422,7 +432,7 @@
                 <Border Grid.Row="2" Style="{StaticResource CardBorder}" Margin="0,10,0,0" Padding="10">
                     <DockPanel>
                         <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
-                            <Button Content="Ask AI" Style="{StaticResource PrimaryBtn}" Click="OnAskCloud" Margin="8,0,0,0" Padding="16,9"/>
+                            <Button Content="Send" Style="{StaticResource PrimaryBtn}" Click="OnAskCloud" Margin="8,0,0,0" Padding="16,9"/>
                             <Button Content="Offline" Style="{StaticResource GhostBtn}" Click="OnAskOffline" Margin="8,0,0,0" Padding="14,8"/>
                             <Button Content="Topics" Style="{StaticResource GhostBtn}" Click="OnOfflineTopics" Margin="8,0,0,0" Padding="14,8"/>
                             <Button Content="DeGoogle AI" Style="{StaticResource GhostBtn}" Click="OnAskHosted" Margin="8,0,0,0" Padding="14,8"/>
@@ -570,7 +580,7 @@
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
                                     Pay with Stripe Checkout in your browser. After payment, this app fills the signed license key below and turns Pro on. Sign in first if you want that Pro license on other PCs too. You can also paste a key (DGK2…) or a Checkout session id (cs_…).
                                 </TextBlock>
-                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout opens Stripe in your browser. Cards never touch this app. By paying you agree to the terms (v3). EU/EEA: 14 days to withdraw if the key is not activated. Cloud Pass is not billed until hosted AI actually runs. EU VAT: add a Stripe Tax registration before turning automatic tax on."/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout opens Stripe in your browser. Cards never touch this app. By paying you agree to the terms (v4). EU/EEA: 14 days to withdraw if the key is not activated. Cloud Pass is not billed until the live Stripe catalog is on. EU VAT: add a Stripe Tax registration before turning automatic tax on."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <Button Content="Buy Lifetime €29.99" Style="{StaticResource PrimaryBtn}" Click="OnBuyLifetime" Margin="0,0,8,0"/>
                                     <Button Content="Buy Family €59.99" Style="{StaticResource GhostBtn}" Click="OnBuyFamily" Margin="0,0,8,0"/>
@@ -586,7 +596,7 @@
                             <StackPanel>
                                 <TextBlock Text="Cloud Pass — €4.99/month or €39/year" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0">
-                                    Stripe catalog placeholders exist, but we will not charge Cloud Pass until hosted DeGoogle AI is actually running.
+                                    Hosted DeGoogle AI on Groq GPT-OSS 120B (we pay Groq; the key never sits in this app). About $0.15 / $0.60 per million tokens. We are not charging Cloud Pass until the live Stripe catalog is on.
                                 </TextBlock>
                             </StackPanel>
                         </Border>

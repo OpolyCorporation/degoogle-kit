@@ -21,11 +21,11 @@ public static class AiProviders
         new()
         {
             Id = "groq",
-            Name = "Groq (fast, often free tier)",
-            DefaultModel = "llama-3.3-70b-versatile",
+            Name = "Groq (fast, cheap)",
+            DefaultModel = "openai/gpt-oss-120b",
             ChatUrl = "https://api.groq.com/openai/v1/chat/completions",
             KeyUrl = "https://console.groq.com/keys",
-            Hint = "Get a key at console.groq.com → API keys. Llama runs on Groq’s hardware, not Google."
+            Hint = "Click Get a key → console.groq.com → API keys → paste it. We pick GPT-OSS 120B for you. Old Llama ids on Groq now 404."
         },
         new()
         {
@@ -149,8 +149,40 @@ public static class AiProviders
         }
     ];
 
+    private static readonly HashSet<string> RetiredGroqModels = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "llama-3.3-70b-versatile",
+        "llama-3.3-70b",
+        "llama-3.1-8b-instant",
+        "llama-3.1-70b-versatile",
+        "llama3-70b-8192",
+        "llama3-8b-8192",
+        "mixtral-8x7b-32768",
+        "gemma2-9b-it",
+        "gemma-7b-it"
+    };
+
     public static AiProviderDef Find(string? id) =>
         All.FirstOrDefault(p => p.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) ?? All[0];
+
+    public static bool IsRetiredGroqModel(string? model) =>
+        !string.IsNullOrWhiteSpace(model) && RetiredGroqModels.Contains(model.Trim());
+
+    public static string NormalizeModel(string? provider, string? model)
+    {
+        var def = Find(provider);
+        var m = (model ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(m)) return def.DefaultModel;
+        if (m.Equals("gpt-oss-120b", StringComparison.OrdinalIgnoreCase) ||
+            m.Equals("groq/gpt-oss-120b", StringComparison.OrdinalIgnoreCase))
+            return "openai/gpt-oss-120b";
+        if (m.Equals("gpt-oss-20b", StringComparison.OrdinalIgnoreCase) ||
+            m.Equals("groq/gpt-oss-20b", StringComparison.OrdinalIgnoreCase))
+            return "openai/gpt-oss-20b";
+        if (def.Id == "groq" && IsRetiredGroqModel(m))
+            return def.DefaultModel;
+        return m;
+    }
 
     public static bool IsGoogleBlocked(params string?[] values) =>
         values.Any(v =>

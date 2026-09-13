@@ -18,7 +18,7 @@ public sealed class ConsentRecord
 public sealed class AppSettings
 {
     public string AiProvider { get; set; } = "groq";
-    public string AiModel { get; set; } = "llama-3.3-70b-versatile";
+    public string AiModel { get; set; } = "openai/gpt-oss-120b";
     public string AiBaseUrl { get; set; } = "";
     public string ProtectedApiKey { get; set; } = "";
     public string UpdateFeedUrl { get; set; } = "";
@@ -106,7 +106,7 @@ public static class PrivacyStore
         var sb = new StringBuilder();
         sb.AppendLine("Controller (optional account, payments, this website): " + LegalCopy.IdentityLine);
         sb.AppendLine("Local files on this PC: you control the copy in AppData until you choose an optional cloud feature.");
-        sb.AppendLine("Processors: Supabase (optional account), Stripe (payments), GitHub/Microsoft (downloads and updates). Optional Cloud AI = the provider you pick, never Google.");
+        sb.AppendLine("Processors: Supabase (optional account), Stripe (payments), GitHub/Microsoft (downloads and updates), Groq (hosted DeGoogle AI only, via our license server). Optional BYOK Cloud AI = the provider you pick, never Google.");
         sb.AppendLine("Public notice: " + LegalCopy.PrivacyUrl);
         sb.AppendLine("Terms: " + LegalCopy.TermsUrl);
         sb.AppendLine("Complaints: Datatilsynet — " + LegalCopy.DatatilsynetUrl);

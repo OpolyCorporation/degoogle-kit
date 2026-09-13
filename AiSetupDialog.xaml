@@ -1,32 +1,37 @@
 <Window x:Class="DeGoogleKit.AiSetupDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Use a real AI"
-        Width="560" SizeToContent="Height"
+        Title="Connect the coach"
+        Width="520" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="{StaticResource Bg}">
     <DockPanel Margin="24">
         <StackPanel DockPanel.Dock="Bottom">
-            <CheckBox x:Name="ConsentBox" Margin="0,0,0,14"
-                      Content="I consent to sending my question and a local scan summary to the provider I pick (not Google)."/>
+            <CheckBox x:Name="ConsentBox" Margin="0,0,0,14">
+                <TextBlock TextWrapping="Wrap" Text="I consent to sending my question and a local scan summary to Groq (never Google)."/>
+            </CheckBox>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Use offline answers" Style="{StaticResource GhostBtn}" Click="OnOffline" Padding="14,8" Margin="0,0,8,0"/>
-                <Button Content="Save and use AI" Style="{StaticResource PrimaryBtn}" Click="OnSave" Padding="14,8" IsDefault="True"/>
+                <Button Content="Save and chat" Style="{StaticResource PrimaryBtn}" Click="OnSave" Padding="14,8" IsDefault="True"/>
             </StackPanel>
         </StackPanel>
         <StackPanel>
-            <TextBlock Text="Use a real AI with your own key?" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"/>
+            <TextBlock Text="Connect Groq (once)" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap"/>
             <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,14"
-                       Text="There is no model inside this app. Pick Claude, ChatGPT, Groq, OpenRouter, OpenCode, Mistral, or a local OpenClaw / Ollama / LM Studio URL. You pay that company — not us. Google Gemini is blocked."/>
-            <TextBlock Text="Provider" FontWeight="SemiBold" Margin="0,0,0,6"/>
-            <ComboBox x:Name="ProviderBox" Margin="0,0,0,10" SelectionChanged="OnProviderChanged"/>
-            <TextBlock x:Name="HintText" Foreground="{StaticResource Accent}" TextWrapping="Wrap" Margin="0,0,0,10" Cursor="Hand" MouseLeftButtonUp="OnHintClick"/>
-            <TextBlock x:Name="EndpointLabel" Text="Endpoint" FontWeight="SemiBold" Margin="0,0,0,6" Visibility="Collapsed"/>
-            <TextBox x:Name="EndpointBox" Height="36" VerticalContentAlignment="Center" Margin="0,0,0,10" Visibility="Collapsed"
-                     Text="http://127.0.0.1:11434/v1"/>
-            <TextBlock Text="API key (optional for OpenCode free models and local servers)" FontWeight="SemiBold" Margin="0,0,0,6"/>
-            <TextBox x:Name="KeyBox" Height="36" VerticalContentAlignment="Center"/>
+                       Text="This coach helps you leave Google. It is not a general everyday AI. Get a free Groq key, paste it, tick consent. We pick the model so you do not get 404s from old Llama ids."/>
+            <Button Content="Get a Groq key" Style="{StaticResource GhostBtn}" Click="OnHintClick" HorizontalAlignment="Left" Padding="14,8" Margin="0,0,0,12"/>
+            <TextBlock Text="Paste key (starts with gsk_)" FontWeight="SemiBold" Margin="0,0,0,6"/>
+            <TextBox x:Name="KeyBox" Height="36" VerticalContentAlignment="Center" Margin="0,0,0,10"/>
+            <TextBlock x:Name="HintText" Foreground="{StaticResource Accent}" TextWrapping="Wrap" Margin="0,0,0,10" Cursor="Hand" MouseLeftButtonUp="OnHintTextClick"/>
+            <Expander Header="Use a different provider" Margin="0,4,0,0">
+                <StackPanel Margin="0,10,0,0">
+                    <ComboBox x:Name="ProviderBox" Margin="0,0,0,10" SelectionChanged="OnProviderChanged"/>
+                    <TextBlock x:Name="EndpointLabel" Text="Endpoint" FontWeight="SemiBold" Margin="0,0,0,6" Visibility="Collapsed"/>
+                    <TextBox x:Name="EndpointBox" Height="36" VerticalContentAlignment="Center" Margin="0,0,0,10" Visibility="Collapsed"
+                             Text="http://127.0.0.1:11434/v1"/>
+                </StackPanel>
+            </Expander>
         </StackPanel>
     </DockPanel>
 </Window>

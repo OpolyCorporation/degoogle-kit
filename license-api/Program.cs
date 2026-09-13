@@ -1,3 +1,4 @@
+using DeGoogleKit.LicenseApi;
 using DeGoogleKit.Licensing;
 using Stripe;
 using Stripe.Checkout;
@@ -13,7 +14,14 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 var app = builder.Build();
 app.UseCors();
 
-app.MapGet("/health", () => Results.Ok(new { ok = true, service = "degoogle-kit-license" }));
+app.MapGet("/health", (IConfiguration config) => Results.Ok(new
+{
+    ok = true,
+    service = "degoogle-kit-license",
+    coach = CoachEndpoints.IsConfigured(config),
+    coach_model = CoachEndpoints.IsConfigured(config) ? CoachEndpoints.ConfiguredModel(config) : null
+}));
+CoachEndpoints.Map(app);
 
 app.MapMethods("/v1/license", ["GET", "POST"], async (HttpRequest request, IConfiguration config) =>
 {
@@ -49,8 +57,11 @@ app.MapMethods("/v1/license", ["GET", "POST"], async (HttpRequest request, IConf
             return Results.Json(new { error = "That session is not paid yet.", status = session.PaymentStatus }, statusCode: 402);
 
         var (sku, seats) = ResolveSku(session, config);
-        if (string.IsNullOrWhiteSpace(sku) || sku.StartsWith("cloud", StringComparison.OrdinalIgnoreCase))
-            return Results.Json(new { error = "This payment is not a DeGoogle Kit Pro license." }, statusCode: 400);
+        if (string.IsNullOrWhiteSpace(sku))
+            return Results.Json(new { error = "This payment is not a DeGoogle Kit license." }, statusCode: 400);
+        var cloud = sku.StartsWith("cloud", StringComparison.OrdinalIgnoreCase);
+        if (!cloud && sku is not "lifetime" and not "family")
+            return Results.Json(new { error = "This payment is not a DeGoogle Kit license." }, statusCode: 400);
 
         var created = session.Created == default
             ? DateTimeOffset.UtcNow.ToUnixTimeSeconds()
@@ -65,7 +76,7 @@ app.MapMethods("/v1/license", ["GET", "POST"], async (HttpRequest request, IConf
             Iat = created
         }, pem);
 
-        return Results.Ok(new { key = ticket, sku, seats, email = session.CustomerDetails?.Email });
+        return Results.Ok(new { key = ticket, sku, seats, email = session.CustomerDetails?.Email, kind = cloud ? "cloud" : "pro" });
     }
     catch (StripeException ex)
     {
@@ -153,6 +164,8 @@ static (string? Sku, int Seats) ResolveSku(Session session, IConfiguration confi
 
     var lifetimePrice = Environment.GetEnvironmentVariable("STRIPE_PRICE_LIFETIME") ?? config["Stripe:PriceLifetime"];
     var familyPrice = Environment.GetEnvironmentVariable("STRIPE_PRICE_FAMILY") ?? config["Stripe:PriceFamily"];
+    var cloudMonth = Environment.GetEnvironmentVariable("STRIPE_PRICE_CLOUD_MONTHLY") ?? config["Stripe:PriceCloudMonthly"];
+    var cloudYear = Environment.GetEnvironmentVariable("STRIPE_PRICE_CLOUD_YEARLY") ?? config["Stripe:PriceCloudYearly"];
 
     foreach (var item in session.LineItems?.Data ?? [])
     {
@@ -161,6 +174,10 @@ static (string? Sku, int Seats) ResolveSku(Session session, IConfiguration confi
             return ("family", 3);
         if (!string.IsNullOrWhiteSpace(lifetimePrice) && priceId == lifetimePrice)
             return ("lifetime", 1);
+        if (!string.IsNullOrWhiteSpace(cloudMonth) && priceId == cloudMonth)
+            return ("cloud_monthly", 1);
+        if (!string.IsNullOrWhiteSpace(cloudYear) && priceId == cloudYear)
+            return ("cloud_yearly", 1);
 
         if (item.Price?.Product is Product product && TryMeta(product.Metadata, out sku, out seats))
             return (sku, seats);

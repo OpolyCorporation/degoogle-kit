@@ -77,6 +77,46 @@ public static class OfflineGuide
         return Index() + "\nI did not match a specific guide. Ask one of the titles above, or add your own AI key for a free-form answer (never Gemini).";
     }
 
+    /// <summary>
+    /// Compact context for hosted / BYOK models so we do not pay to send every guide every time.
+    /// </summary>
+    public static string ForHosted(string question, ScanSnapshot scan, IReadOnlyList<GuideItem> guide)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine(AiCoach.LocalPlan(scan, guide));
+        sb.AppendLine();
+        sb.AppendLine("Guide titles: " + string.Join("; ", Topics.Select(t => t.Title)));
+        var q = (question ?? "").Trim().ToLowerInvariant();
+        var ranked = Topics
+            .Select(t => (Topic: t, Score: Score(q, t)))
+            .Where(x => x.Score > 0)
+            .OrderByDescending(x => x.Score)
+            .Take(2)
+            .ToList();
+        if (ranked.Count == 0)
+        {
+            var order = Topics.FirstOrDefault(t => t.Id == "order");
+            if (order is not null)
+            {
+                sb.AppendLine();
+                sb.AppendLine("## " + order.Title);
+                sb.AppendLine(order.Body);
+            }
+        }
+        else
+        {
+            foreach (var (topic, _) in ranked)
+            {
+                sb.AppendLine();
+                sb.AppendLine("## " + topic.Title);
+                sb.AppendLine(topic.Body);
+                var note = ScanNote(scan, topic.Id);
+                if (note.Length > 0) sb.AppendLine(note.Trim());
+            }
+        }
+        return sb.ToString();
+    }
+
     private static string Format(OfflineTopic topic) =>
         topic.Title + "\n\n" + topic.Body + "\n\n" + ShortFooter();
 
@@ -398,7 +438,7 @@ public static class OfflineGuide
         T("never", "What this app will not do",
             ["never", "auto delete", "safe", "wreck", "risk"],
             """
-            DeGoogle Kit does not: log into Google for you, scrape Gmail with your password, silently uninstall Chrome, wipe Drive/Chrome folders, or erase the Google account. You click each destructive step. Scan, plan, Takeout parse, catalog, GDPR templates, and this offline coach are free. Pro is extras (DNS apply, HTML report). Cloud Pass is not live until hosted AI exists.
+            DeGoogle Kit does not: log into Google for you, scrape Gmail with your password, silently uninstall Chrome, wipe Drive/Chrome folders, or erase the Google account. You click each destructive step. Scan, plan, Takeout parse, catalog, GDPR templates, and this offline coach are free. Pro is extras (DNS apply, HTML report). DeGoogle AI (Cloud Pass) is hosted Groq GPT-OSS 120B that we pay for — it is not billed until the live Stripe catalog is on.
             """),
 
         T("verify", "Verify before you disconnect",

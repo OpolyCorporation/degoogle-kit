@@ -56,9 +56,11 @@ public partial class MainWindow : Window
         CloudAiConsentBox.IsChecked = PrivacyStore.Consent.CloudAiConsent;
         FillAiProviders();
         SelectProvider(PrivacyStore.Settings.AiProvider);
+        MigrateRetiredGroqModel();
         AiModelBox.Text = PrivacyStore.Settings.AiModel;
         AiBaseUrlBox.Text = PrivacyStore.Settings.AiBaseUrl;
         ApplyAiProviderUi();
+        UpdateCoachConnectUi();
         RefreshLicenseUi();
         RefreshAudit();
         UpdateGuideStats();
@@ -70,7 +72,7 @@ public partial class MainWindow : Window
         _chat.Add(new ChatMessage
         {
             Role = "Coach",
-            Text = "Offline answers cover the full leave-Google path (mail, photos, Chrome, Takeout, phone, GDPR…). Ask a product name, or type “topics”. Your own AI key is optional. Gemini is blocked."
+            Text = "I’m the DeGoogle coach. Ask about Gmail, Photos, Chrome, Takeout, 2FA, the phone, GDPR — I’ll walk you through it like a chatbot. Related privacy questions are fine. I’m not a general everyday AI, so don’t use me as ChatGPT.\n\nOnce: Get a Groq key, paste it, tick consent, Send. Offline and Topics work with no key."
         });
         _uiReady = true;
         BindPermissionToggles();
@@ -496,16 +498,19 @@ public partial class MainWindow : Window
     private async Task AskUserAiAsync(string question, bool showUser = false)
     {
         if (!PersistAiSettings()) return;
+        CapturePastedKey();
+        if (CloudAiConsentBox.IsChecked == true)
+            PrivacyStore.SetCloudAiConsent(true);
         if (!EnsureUserAi())
         {
             AddChat("Coach", AiCoach.LocalAnswer(question, _scan, _guide) +
-                             "\n\n(Offline answer — add a Claude, ChatGPT, Groq, OpenRouter, or OpenCode key, or a local Ollama/OpenClaw URL, for a real AI.)");
+                             "\n\n(Offline for now. Expand Connect Groq, Get a key, paste it, tick consent, then Send.)");
             return;
         }
 
         var provider = PrivacyStore.Settings.AiProvider;
         if (!AskAccess.For(this, AccessKind.CloudAiSend,
-                $"Send this question and a local scan summary to {ProviderLabel(provider)}? Not Google. Uses your API key — you pay them, not us."))
+                $"Send this chat turn and a local scan summary to {ProviderLabel(provider)}? Not Google. Uses your API key — you pay them, not us."))
             return;
 
         if (showUser)
@@ -518,7 +523,7 @@ public partial class MainWindow : Window
         string answer;
         try
         {
-            answer = await AiCoach.CloudAnswer(question, _scan, _guide, CancellationToken.None);
+            answer = await AiCoach.CloudAnswer(question, _scan, _guide, _chat.ToList(), CancellationToken.None);
         }
         finally
         {
@@ -526,6 +531,7 @@ public partial class MainWindow : Window
         }
         if (_chat.Count > 0) _chat.RemoveAt(_chat.Count - 1);
         AddChat("Coach", answer);
+        UpdateCoachConnectUi();
     }
 
     private void SetAiBusy(bool on, string? label = null)
@@ -539,15 +545,40 @@ public partial class MainWindow : Window
 
     private static string ProviderLabel(string provider) => AiProviders.Find(provider).Name;
 
-    private void OnAskHosted(object sender, RoutedEventArgs e)
+    private async void OnAskHosted(object sender, RoutedEventArgs e)
     {
         var q = ChatInput.Text.Trim();
-        if (q.Length > 0)
+        if (q.Length == 0) q = "what should I do first?";
+        if (!PrivacyStore.Consent.CloudAiConsent)
+        {
+            AddChat("Coach", "Tick the consent box on this tab first. DeGoogle AI sends your question to our license server, then Groq — never Google.");
+            return;
+        }
+        if (!LicenseService.IsCloudPass)
         {
             AddChat("You", q);
             ChatInput.Clear();
+            AddChat("Coach", AiCoach.HostedAnswerUnavailable());
+            return;
         }
-        AddChat("Coach", AiCoach.HostedAnswerUnavailable());
+        if (!AskAccess.For(this, AccessKind.HostedAiSend))
+            return;
+
+        AddChat("You", q);
+        ChatInput.Clear();
+        AddChat("Coach", "Contacting DeGoogle AI (" + AiCoach.HostedModelLabel + ")…");
+        SetAiBusy(true, "Contacting DeGoogle AI…");
+        string answer;
+        try
+        {
+            answer = await AiCoach.HostedAnswer(q, _scan, _guide, _chat.ToList(), CancellationToken.None);
+        }
+        finally
+        {
+            SetAiBusy(false);
+        }
+        if (_chat.Count > 0) _chat.RemoveAt(_chat.Count - 1);
+        AddChat("Coach", answer);
     }
 
     private void OnSaveApiKey(object sender, RoutedEventArgs e)
@@ -563,8 +594,9 @@ public partial class MainWindow : Window
             ApiKeyBox.Clear();
             UpdateApiKeyWatermark();
         }
-        MessageBox.Show("Provider settings saved on this Windows user. Keys use DPAPI and are never sent to us or to Google.",
+        MessageBox.Show("Key saved on this Windows user. Tick consent if you have not, then Send. Keys use DPAPI and are never sent to us or to Google.",
             "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+        UpdateCoachConnectUi();
     }
 
     private void OnAiProviderChanged(object sender, SelectionChangedEventArgs e)
@@ -576,6 +608,7 @@ public partial class MainWindow : Window
         PrivacyStore.SaveSettings(settings);
         AiModelBox.Text = settings.AiModel;
         ApplyAiProviderUi();
+        UpdateCoachConnectUi();
     }
 
     private void OnApiKeyChanged(object sender, RoutedEventArgs e) => UpdateApiKeyWatermark();
@@ -615,6 +648,56 @@ public partial class MainWindow : Window
             AiProviderBox.Items.Add(new ComboBoxItem { Content = p.Name, Tag = p.Id });
     }
 
+    private static void MigrateRetiredGroqModel()
+    {
+        var settings = PrivacyStore.Settings;
+        var next = AiProviders.NormalizeModel(settings.AiProvider, settings.AiModel);
+        if (string.Equals(settings.AiModel, next, StringComparison.Ordinal)) return;
+        settings.AiModel = next;
+        PrivacyStore.SaveSettings(settings);
+    }
+
+    private void UpdateCoachConnectUi()
+    {
+        if (AiConnectHeader is null || AiConnectExpander is null) return;
+        if (AiCoach.HasUserAi())
+        {
+            AiConnectHeader.Text = "AI connected — click to change key or provider";
+            AiConnectExpander.IsExpanded = false;
+        }
+        else if (!string.IsNullOrWhiteSpace(SecretStore.LoadApiKey()) && !PrivacyStore.Consent.CloudAiConsent)
+        {
+            AiConnectHeader.Text = "Key saved — tick consent, then Send";
+            AiConnectExpander.IsExpanded = true;
+        }
+        else
+        {
+            AiConnectHeader.Text = "Connect Groq once — Get a key, paste it, tick consent, then chat";
+            AiConnectExpander.IsExpanded = true;
+        }
+    }
+
+    private void CapturePastedKey()
+    {
+        if (ApiKeyBox is null) return;
+        var pasted = ApiKeyBox.Password.Trim();
+        if (pasted.Length < 8) return;
+        var existing = SecretStore.LoadApiKey() ?? "";
+        if (string.Equals(existing, pasted, StringComparison.Ordinal))
+        {
+            ApiKeyBox.Clear();
+            UpdateApiKeyWatermark();
+            return;
+        }
+        if (!AskAccess.For(this, AccessKind.StoreSecret,
+                "Save this API key for your Windows user (DPAPI)? It is never sent to us or to Google by this save."))
+            return;
+        SecretStore.SaveApiKey(pasted);
+        ApiKeyBox.Clear();
+        UpdateApiKeyWatermark();
+        UpdateCoachConnectUi();
+    }
+
     private AiProviderDef CurrentAiProvider()
     {
         var id = (AiProviderBox.SelectedItem as ComboBoxItem)?.Tag as string
@@ -642,8 +725,8 @@ public partial class MainWindow : Window
         var def = CurrentAiProvider();
         var settings = PrivacyStore.Settings;
         settings.AiProvider = def.Id;
-        if (!string.IsNullOrWhiteSpace(AiModelBox.Text))
-            settings.AiModel = AiModelBox.Text.Trim();
+        settings.AiModel = AiProviders.NormalizeModel(def.Id, AiModelBox.Text);
+        AiModelBox.Text = settings.AiModel;
         settings.AiBaseUrl = def.NeedsEndpoint ? AiBaseUrlBox.Text.Trim() : "";
         if (AiProviders.IsGoogleBlocked(def.Id, settings.AiModel, settings.AiBaseUrl))
         {
@@ -654,8 +737,11 @@ public partial class MainWindow : Window
         return true;
     }
 
-    private void OnCloudConsent(object sender, RoutedEventArgs e) =>
+    private void OnCloudConsent(object sender, RoutedEventArgs e)
+    {
         PrivacyStore.SetCloudAiConsent(CloudAiConsentBox.IsChecked == true);
+        UpdateCoachConnectUi();
+    }
 
     private void OnCopyAccess(object sender, RoutedEventArgs e)
     {
@@ -1103,7 +1189,9 @@ public partial class MainWindow : Window
             LicenseBox.Text = result.Key;
             RefreshLicenseUi();
             NavPro.IsChecked = true;
-            if (AccountService.IsSignedIn)
+            var cloud = !string.IsNullOrWhiteSpace(LicenseService.Record.CloudKey)
+                        && string.Equals(LicenseService.Record.CloudKey, result.Key, StringComparison.OrdinalIgnoreCase);
+            if (AccountService.IsSignedIn && !cloud)
             {
                 var bind = await AccountService.BindLicenseAsync(result.Key);
                 if (interactive && !bind.Ok)
@@ -1111,10 +1199,18 @@ public partial class MainWindow : Window
             }
             if (interactive || !string.IsNullOrWhiteSpace(raw))
             {
-                var extra = LicenseService.Record.Seats > 1
-                    ? " Family covers up to " + LicenseService.Record.Seats + " PCs — copy the key below onto the others."
-                    : "";
-                MessageBox.Show("Pro is on. The signed license key is in the box on the Pro tab." + extra, "License");
+                if (cloud)
+                {
+                    var until = LicenseService.Record.CloudPassEnds is { } end ? " until " + end.ToString("d") : "";
+                    MessageBox.Show("Cloud Pass is on" + until + ". DeGoogle AI uses Groq GPT-OSS 120B (we pay). It is not billed until the live Stripe catalog is on.", "License");
+                }
+                else
+                {
+                    var extra = LicenseService.Record.Seats > 1
+                        ? " Family covers up to " + LicenseService.Record.Seats + " PCs — copy the key below onto the others."
+                        : "";
+                    MessageBox.Show("Pro is on. The signed license key is in the box on the Pro tab." + extra, "License");
+                }
             }
         }
         finally

@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using DeGoogleKit.Licensing;
 
 namespace DeGoogleKit.Services;
@@ -13,6 +11,7 @@ public sealed class LicenseRecord
     public int Seats { get; set; } = 1;
     public DateTime? KeyExpires { get; set; }
     public DateTime? CloudPassEnds { get; set; }
+    public string CloudKey { get; set; } = "";
 }
 
 public static class LicenseService
@@ -112,8 +111,9 @@ public static class LicenseService
             }
             else if (LicenseTicket.IsCloud(payload))
             {
-                paid.CloudPassEnds = DateTime.Today.AddYears(1);
-                PrivacyStore.Log("cloud_pass_activated", payload.Sid);
+                paid.CloudKey = key;
+                paid.CloudPassEnds = PassKeys.CloudExpiryUtc(payload).ToLocalTime();
+                PrivacyStore.Log("cloud_pass_activated", payload.Sku + " " + payload.Sid);
             }
             else return false;
             JsonFile.Save(AppPaths.License, paid);
@@ -133,6 +133,7 @@ public static class LicenseService
         }
         else if (kind == "cloud")
         {
+            r.CloudKey = key.ToUpperInvariant();
             r.CloudPassEnds = expires;
             PrivacyStore.Log("cloud_pass_activated", expires!.Value.ToString("d"));
         }
@@ -151,10 +152,10 @@ public static class LicenseService
     }
 
     public static string IssueLifetimeKey() =>
-        $"DGKL-LIFE-{Checksum("DGKL-LIFE")}";
+        $"DGKL-LIFE-{PassKeys.Checksum("DGKL-LIFE")}";
 
     public static string IssueCloudKey(DateTime expires) =>
-        $"DGKC-{expires:yyyyMMdd}-{Checksum($"DGKC-{expires:yyyyMMdd}")}";
+        $"DGKC-{expires:yyyyMMdd}-{PassKeys.Checksum($"DGKC-{expires:yyyyMMdd}")}";
 
     public static string IssueLocalKey(DateTime expires) => IssueCloudKey(expires);
 
@@ -174,7 +175,7 @@ public static class LicenseService
 
         if (parts[0] == "DGKL" && parts[1] == "LIFE")
         {
-            if (!string.Equals(parts[2], Checksum("DGKL-LIFE"), StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(parts[2], PassKeys.Checksum("DGKL-LIFE"), StringComparison.OrdinalIgnoreCase))
                 return false;
             kind = "lifetime";
             return true;
@@ -185,7 +186,7 @@ public static class LicenseService
             if (!DateTime.TryParseExact(parts[1], "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var date))
                 return false;
             var payload = $"{parts[0]}-{parts[1]}";
-            if (!string.Equals(parts[2], Checksum(payload), StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(parts[2], PassKeys.Checksum(payload), StringComparison.OrdinalIgnoreCase))
                 return false;
             if (date.Date < DateTime.Today) return false;
             kind = parts[0] == "DGKC" ? "cloud" : "legacy";
@@ -196,9 +197,14 @@ public static class LicenseService
         return false;
     }
 
-    private static string Checksum(string payload)
+    public static string HostedLicenseKey
     {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(payload + "|degoogle-kit-license-v1"));
-        return Convert.ToHexString(bytes)[..6];
+        get
+        {
+            var r = Record;
+            if (!string.IsNullOrWhiteSpace(r.CloudKey)) return r.CloudKey;
+            if (PassKeys.TryValidateCloud(r.Key, out _)) return r.Key;
+            return "";
+        }
     }
 }

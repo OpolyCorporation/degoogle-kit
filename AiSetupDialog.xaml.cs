@@ -52,7 +52,8 @@ public partial class AiSetupDialog : Window
             ProviderBox.SelectedIndex = 0;
     }
 
-    private void OnHintClick(object sender, System.Windows.Input.MouseButtonEventArgs e) => OpenHint();
+    private void OnHintClick(object sender, RoutedEventArgs e) => OpenHint();
+    private void OnHintTextClick(object sender, System.Windows.Input.MouseButtonEventArgs e) => OpenHint();
 
     private void OpenHint()
     {
@@ -103,7 +104,7 @@ public partial class AiSetupDialog : Window
 
         var settings = PrivacyStore.Settings;
         settings.AiProvider = def.Id;
-        settings.AiModel = def.DefaultModel;
+        settings.AiModel = AiProviders.NormalizeModel(def.Id, def.DefaultModel);
         settings.AiBaseUrl = def.NeedsEndpoint ? endpoint : "";
         PrivacyStore.SaveSettings(settings);
         if (key.Length >= 8)
