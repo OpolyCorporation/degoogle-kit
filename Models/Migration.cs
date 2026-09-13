@@ -115,6 +115,7 @@ public sealed class TakeoutInventory
 {
     public string SourcePath { get; set; } = "";
     public List<TakeoutEntry> Bundles { get; } = [];
+    public Dictionary<string, long> BundleBytes { get; } = new(StringComparer.OrdinalIgnoreCase);
     public long Emails { get; set; }
     public long Contacts { get; set; }
     public long Events { get; set; }

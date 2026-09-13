@@ -58,6 +58,12 @@ public sealed class ScanSnapshot
     public bool DefaultBrowserIsGoogle { get; set; }
     public List<string> GoogleFolders { get; } = [];
     public List<string> GoogleTasks { get; } = [];
+    public List<string> GoogleServices { get; } = [];
+    public List<string> ChromeExtensions { get; } = [];
+    public List<string> GoogleProcesses { get; } = [];
+    public List<string> StartupEntries { get; } = [];
+    public List<string> SignedInEmails { get; } = [];
+    public List<string> GoogleFolderChildren { get; } = [];
     public List<string> DnsServers { get; } = [];
     public bool DnsLooksLikeGoogle { get; set; }
 }

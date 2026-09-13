@@ -230,7 +230,7 @@ public static class AccountService
         {
             using var http = CreateClient();
             using var req = new HttpRequestMessage(HttpMethod.Get,
-                Url + "/rest/v1/progress?select=guide_done,plan,updated_at&limit=1");
+                Url + "/rest/v1/progress?select=guide_done,plan,updated_at,trial_started_at&limit=1");
             ApplyUser(req, token);
             using var res = await http.SendAsync(req);
             var body = await res.Content.ReadAsStringAsync();
@@ -330,6 +330,7 @@ public static class AccountService
             exported_at = DateTime.UtcNow,
             guide_done = pull.Data?.GuideDone,
             plan = pull.Data?.Plan,
+            trial_started_at = pull.Data?.TrialStartedAt,
             updated_at = pull.Data?.UpdatedAt
         };
         AppPaths.EnsureRoot();
@@ -396,7 +397,102 @@ public static class AccountService
             progress.Plan = JsonSerializer.Deserialize<PlanState>(plan.GetRawText(), JsonFile.Options) ?? new PlanState();
         if (row.TryGetProperty("updated_at", out var at) && DateTimeOffset.TryParse(at.GetString(), out var stamp))
             progress.UpdatedAt = stamp;
+        if (row.TryGetProperty("trial_started_at", out var trial) && trial.ValueKind != JsonValueKind.Null)
+        {
+            if (trial.ValueKind == JsonValueKind.String && DateTimeOffset.TryParse(trial.GetString(), out var started))
+                progress.TrialStartedAt = started;
+            else if (trial.TryGetDateTimeOffset(out var dto))
+                progress.TrialStartedAt = dto;
+        }
         return true;
+    }
+
+    public static async Task<(bool Ok, string Message, DateTimeOffset? StartedAt)> ClaimTrialAsync(
+        IEnumerable<string> guideDone, PlanState plan)
+    {
+        if (!PermissionService.AccountCloudGranted)
+            return (false, "Permission to use Supabase was not granted.", null);
+        var token = await ValidAccessTokenAsync();
+        if (token is null) return (false, "Sign in first.", null);
+        var userId = Session?.UserId;
+        if (string.IsNullOrWhiteSpace(userId))
+            userId = await FetchUserIdAsync(token);
+        if (string.IsNullOrWhiteSpace(userId))
+            return (false, "Account user id missing. Sign in again.", null);
+
+        var pull = await PullProgressAsync();
+        if (!pull.Ok) return (false, pull.Message, null);
+        if (pull.Data?.TrialStartedAt is { } existing)
+            return (false, "This account already used the Pro trial.", existing);
+
+        var started = DateTime.UtcNow;
+        try
+        {
+            using var http = CreateClient();
+            if (pull.Data is null)
+            {
+                var insert = new Dictionary<string, object?>
+                {
+                    ["user_id"] = userId,
+                    ["guide_done"] = guideDone.ToList(),
+                    ["plan"] = plan,
+                    ["updated_at"] = started,
+                    ["trial_started_at"] = started
+                };
+                using var req = new HttpRequestMessage(HttpMethod.Post, Url + "/rest/v1/progress");
+                ApplyUser(req, token);
+                req.Headers.TryAddWithoutValidation("Prefer", "return=minimal");
+                req.Content = new StringContent(
+                    JsonSerializer.Serialize(insert),
+                    System.Text.Encoding.UTF8,
+                    "application/json");
+                using var res = await http.SendAsync(req);
+                var body = await res.Content.ReadAsStringAsync();
+                if (!res.IsSuccessStatusCode)
+                    return (false, ProgressError(body, "Could not save the trial to your account."), null);
+            }
+            else
+            {
+                using var req = new HttpRequestMessage(HttpMethod.Patch,
+                    Url + "/rest/v1/progress?user_id=eq." + userId + "&trial_started_at=is.null");
+                ApplyUser(req, token);
+                req.Headers.TryAddWithoutValidation("Prefer", "return=representation");
+                req.Content = new StringContent(
+                    JsonSerializer.Serialize(new Dictionary<string, object?>
+                    {
+                        ["trial_started_at"] = started,
+                        ["updated_at"] = started
+                    }),
+                    System.Text.Encoding.UTF8,
+                    "application/json");
+                using var res = await http.SendAsync(req);
+                var body = await res.Content.ReadAsStringAsync();
+                if (!res.IsSuccessStatusCode)
+                    return (false, ProgressError(body, "Could not save the trial to your account."), null);
+                if (LooksEmptyJson(body))
+                {
+                    var again = await PullProgressAsync();
+                    if (again.Data?.TrialStartedAt is { } raced)
+                        return (false, "This account already used the Pro trial.", raced);
+                    return (false, "Could not save the trial to your account.", null);
+                }
+            }
+
+            var saved = await PullProgressAsync();
+            if (saved.Data?.TrialStartedAt is { } at)
+                return (true, "Trial saved to this account.", at);
+            return (true, "Trial saved to this account.", started);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message, null);
+        }
+    }
+
+    private static bool LooksEmptyJson(string body)
+    {
+        var t = (body ?? "").Trim();
+        return t.Length == 0 || t == "[]" || t == "{}";
     }
 
     private static string ProgressError(string body, string fallback)

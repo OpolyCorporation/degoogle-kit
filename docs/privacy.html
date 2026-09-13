@@ -11,7 +11,7 @@
   <main>
     <p><a class="quiet" href="./">← DeGoogle Kit</a></p>
     <h1>Privacy notice</h1>
-    <p>Version 2. Controller: Opolyonix Corp, CVR 43410369, c/o Jack Jim Holst Jensen, Sportsvej 2, 2. th, 6705 Esbjerg Ø, Denmark.</p>
+    <p>Version 3. Controller: Opolyonix Corp, CVR 43410369, c/o Jack Jim Holst Jensen, Sportsvej 2, 2. th, 6705 Esbjerg Ø, Denmark.</p>
     <p>Electronic contact for privacy and consumer requests: open a GitHub issue at
       <a href="https://github.com/OpolyCorporation/degoogle-kit/issues">github.com/OpolyCorporation/degoogle-kit/issues</a>
       with the subject “Privacy (GDPR)” or “Withdrawal (consumer)”. Do not send Takeout archives or passwords.</p>
@@ -19,7 +19,7 @@
     <h2>Who processes what</h2>
     <ul>
       <li><strong>Local use (default).</strong> DeGoogle Kit runs on your Windows PC. Plan, checklist, scan results, Takeout files you choose, API keys, and trial/Pro status stay in AppData\DeGoogleKit. Opolyonix Corp does not receive that copy unless you later choose an optional cloud feature.</li>
-      <li><strong>Optional free account.</strong> If you create an email/password account, Opolyonix Corp is the controller of that account. Processor: Supabase (Auth + Postgres), not Google. We store your email, a hashed password (Supabase Auth), your plan, and your guide checklist so they can follow you to another PC. We do not upload API keys, Takeout files, scan results, or clipboard contents.</li>
+      <li><strong>Optional free account.</strong> If you create an email/password account, Opolyonix Corp is the controller of that account. Processor: Supabase (Auth + Postgres), not Google. We store your email, a hashed password (Supabase Auth), your plan, your guide checklist, and whether this account started the Pro trial (a timestamp only) so the trial can follow you to another PC. We do not upload API keys, Takeout files, scan results, or clipboard contents.</li>
       <li><strong>Payments.</strong> Stripe processes Checkout for Lifetime Pro / Family. We do not store card numbers. After payment a signed license key can be linked to your account.</li>
       <li><strong>Updates and this website.</strong> GitHub (Microsoft) hosts the Windows download, version feed, and these pages. Checking for updates is optional and sends the app version in the User-Agent.</li>
       <li><strong>Optional Cloud AI.</strong> Only if you tick a separate consent box and use your own API key. The provider you pick (never Google Gemini) receives your question and a local scan summary. You can withdraw that consent in the app.</li>
@@ -28,7 +28,7 @@
     <h2>Purposes and legal bases (GDPR Art. 6)</h2>
     <ul>
       <li>Provide the local app you asked to run — Art. 6(1)(b) contract / steps at your request.</li>
-      <li>Optional account (email, plan, checklist backup) — Art. 6(1)(a) consent, given when you create or sign in. Withdraw by deleting the account; local files remain until you erase them.</li>
+      <li>Optional account (email, plan, checklist backup, trial start timestamp) — Art. 6(1)(a) consent, given when you create or sign in. Withdraw by deleting the account; local files remain until you erase them.</li>
       <li>Paid license delivery and fraud prevention — Art. 6(1)(b) and 6(1)(f).</li>
       <li>Optional Cloud AI — Art. 6(1)(a) consent, separate from the account.</li>
       <li>Legal obligations (tax/accounting for a paid license) — Art. 6(1)(c).</li>
@@ -45,7 +45,7 @@
     <h2>Your rights (Arts. 15–21)</h2>
     <p>Access, rectification, erasure, restriction, portability, and objection. In the app: Privacy → Export my data, Delete all local data, and Delete my cloud account. Withdraw account consent by deleting the account, and Cloud AI consent on the Coach tab.</p>
     <p>Complaints: <a href="https://www.datatilsynet.dk/">Datatilsynet (Denmark)</a> or your local EEA authority. You may also contact us first via GitHub issues.</p>
-    <p class="foot">Also see <a href="terms.html">terms</a>. This notice is the same as privacy notice v2 inside the Windows app.</p>
+    <p class="foot">Also see <a href="terms.html">terms</a>. This notice is the same as privacy notice v3 inside the Windows app.</p>
   </main>
 </body>
 </html>

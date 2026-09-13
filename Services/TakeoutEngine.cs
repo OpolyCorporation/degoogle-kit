@@ -94,6 +94,12 @@ public static class TakeoutEngine
     {
         var n = "/" + rel.Replace('\\', '/').TrimStart('/');
         var ext = Path.GetExtension(n);
+        var parts = n.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var bag = parts.Length >= 2 && parts[0].Equals("Takeout", StringComparison.OrdinalIgnoreCase)
+            ? parts[1]
+            : parts.FirstOrDefault() ?? "Takeout";
+        inv.BundleBytes.TryGetValue(bag, out var n0);
+        inv.BundleBytes[bag] = n0 + length;
 
         if (n.Contains("/Mail/", StringComparison.OrdinalIgnoreCase) && n.EndsWith(".mbox", StringComparison.OrdinalIgnoreCase))
         {
@@ -132,6 +138,8 @@ public static class TakeoutEngine
         {
             Mark(inv, "maps");
             if (n.EndsWith(".json", StringComparison.OrdinalIgnoreCase) && length < 40_000_000)
+                inv.SavedPlaces += CountPlaces(open);
+            else if (n.EndsWith(".kml", StringComparison.OrdinalIgnoreCase) && length < 40_000_000)
                 inv.SavedPlaces += CountPlaces(open);
         }
         else if (n.Contains("Location History", StringComparison.OrdinalIgnoreCase))
@@ -179,6 +187,33 @@ public static class TakeoutEngine
         inv.Summary = bits.Count == 0
             ? "This looks like a Takeout archive, but we did not recognise the usual Gmail/Photos/Drive folders. You can still keep it as a backup."
             : string.Join("\n", bits.Select(b => "✓ " + b));
+        foreach (var bag in inv.BundleBytes.Keys)
+            MarkFromBag(inv, bag);
+        inv.Bundles.Clear();
+        foreach (var kv in inv.BundleBytes.OrderByDescending(x => x.Value))
+            inv.Bundles.Add(TakeoutService.Entry(kv.Key, kv.Value));
+    }
+
+    private static void MarkFromBag(TakeoutInventory inv, string bag)
+    {
+        var n = bag.ToLowerInvariant();
+        if (n.Contains("mail") || n.Contains("gmail")) Mark(inv, "gmail");
+        if (n.Contains("calendar")) Mark(inv, "calendar");
+        if (n.Contains("contact")) Mark(inv, "contacts");
+        if (n.Contains("drive")) Mark(inv, "drive");
+        if (n.Contains("photo")) Mark(inv, "photos");
+        if (n.Contains("keep")) Mark(inv, "keep");
+        if (n.Contains("chrome")) Mark(inv, "chrome");
+        if (n.Contains("password")) Mark(inv, "passwords");
+        if (n.Contains("map") || n.Contains("location")) Mark(inv, "maps");
+        if (n.Contains("youtube") && n.Contains("music")) Mark(inv, "ytmusic");
+        else if (n.Contains("youtube")) { Mark(inv, "youtube"); Mark(inv, "ytmusic"); }
+        if (n.Contains("meet") || n.Contains("hangout") || n.Contains("chat") || n.Contains("voice"))
+            Mark(inv, "meet");
+        if (n.Contains("doc") || n.Contains("document")) Mark(inv, "docs");
+        if (n.Contains("sheet") || n.Contains("spreadsheet")) Mark(inv, "sheets");
+        if (n.Contains("home") || n.Contains("nest")) Mark(inv, "home");
+        if (n.Contains("android") || n.Contains("play store")) Mark(inv, "android");
     }
 
     private static void ConvertKeepFromFolder(string root, string dest)
@@ -338,6 +373,13 @@ public static class TakeoutEngine
 
     private static List<Place> ParsePlaces(string raw)
     {
+        var list = ParseGeoJsonPlaces(raw);
+        if (list.Count > 0) return list;
+        return ParseKmlPlaces(raw);
+    }
+
+    private static List<Place> ParseGeoJsonPlaces(string raw)
+    {
         var list = new List<Place>();
         try
         {
@@ -362,7 +404,35 @@ public static class TakeoutEngine
                 }
             }
         }
-        catch { /* KML or unknown JSON is ignored for counts */ }
+        catch
+        {
+            // Not GeoJSON.
+        }
+        return list;
+    }
+
+    private static List<Place> ParseKmlPlaces(string raw)
+    {
+        var list = new List<Place>();
+        if (raw.IndexOf("Placemark", StringComparison.OrdinalIgnoreCase) < 0) return list;
+        try
+        {
+            var doc = XDocument.Parse(raw);
+            foreach (var pm in doc.Descendants().Where(e => e.Name.LocalName == "Placemark"))
+            {
+                var name = pm.Descendants().FirstOrDefault(e => e.Name.LocalName == "name")?.Value ?? "";
+                var coords = pm.Descendants().FirstOrDefault(e => e.Name.LocalName == "coordinates")?.Value ?? "";
+                var parts = coords.Trim().Split([',', ' ', '\n', '\r', '\t'], StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length < 2) continue;
+                if (!double.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out var lng)) continue;
+                if (!double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out var lat)) continue;
+                if (lat != 0 || lng != 0) list.Add(new Place(name, lat, lng, "", ""));
+            }
+        }
+        catch
+        {
+            // Not KML.
+        }
         return list;
     }
 

@@ -126,7 +126,7 @@ public static class PrivacyStore
         sb.AppendLine();
         sb.AppendLine("We do not sell data, run ads, or send telemetry. No Google APIs.");
         sb.AppendLine("Check for updates (optional, you click it) downloads a version file from our GitHub release feed — not Google. It sends the app version in the User-Agent. You can change the feed URL.");
-        sb.AppendLine("An optional free account uses Supabase Auth (email/password, not Google) to back up your plan and checklist. API keys, Takeout files, and scan results stay on this PC. While you are signed in, the app may ping that project about once a day so a free-plan database is less likely to pause (a timestamp only, not your plan).");
+        sb.AppendLine("An optional free account uses Supabase Auth (email/password, not Google) to back up your plan and checklist, and to remember whether that account started the Pro trial. API keys, Takeout files, and scan results stay on this PC. While you are signed in, the app may ping that project about once a day so a free-plan database is less likely to pause (a timestamp only, not your plan).");
         sb.AppendLine("Legal bases: consent (Art. 6(1)(a)) for the optional account and for Cloud AI; contract (Art. 6(1)(b)) for local features and paid licenses; legal obligation (Art. 6(1)(c)) for paid-order records.");
         sb.AppendLine("Retention: local until you delete or uninstall; account until you delete the account.");
         sb.AppendLine("Transfers: none in local mode. Account and payments use the processors named above (SCCs/adequacy if outside the EEA).");

@@ -22,11 +22,19 @@ public static class AiCoach
 
         var apps = scan.Apps.Where(a => !a.IsUpdater).ToList();
         if (apps.Count > 0)
-        {
             sb.AppendLine($"2. Google desktop software still installed: {string.Join(", ", apps.Select(a => a.Name))}.");
-            sb.AppendLine("   Uninstall from the This PC tab only after you have a replacement signed in.");
-        }
-        else sb.AppendLine("2. No Google desktop apps showed up in Add/Remove Programs.");
+        else
+            sb.AppendLine("2. No Google desktop apps showed up in Add/Remove Programs.");
+        if (scan.ChromeExtensions.Count > 0)
+            sb.AppendLine($"   Chrome still has {scan.ChromeExtensions.Distinct().Count()} Google-related extension(s).");
+        if (scan.GoogleServices.Count > 0)
+            sb.AppendLine($"   Windows services still named Google/Chrome: {string.Join(", ", scan.GoogleServices.Distinct().Take(6))}.");
+        if (scan.GoogleProcesses.Count > 0)
+            sb.AppendLine($"   Running now: {string.Join(", ", scan.GoogleProcesses.Distinct())}.");
+        if (scan.SignedInEmails.Count > 0)
+            sb.AppendLine($"   Chrome still has {scan.SignedInEmails.Count} Google account(s) signed in.");
+        if (scan.StartupEntries.Count > 0)
+            sb.AppendLine($"   Starts with Windows: {string.Join(", ", scan.StartupEntries.Distinct().Take(6))}.");
 
         if (scan.DnsLooksLikeGoogle)
             sb.AppendLine("3. This PC uses Google DNS (8.8.8.8). Switch to Quad9 in the Network tab (Lifetime Pro, reversible).");

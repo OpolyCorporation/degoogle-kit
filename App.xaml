@@ -35,6 +35,18 @@
         <SolidColorBrush x:Key="Danger" Color="{StaticResource DangerColor}"/>
         <SolidColorBrush x:Key="Purple" Color="{StaticResource PurpleColor}"/>
         <SolidColorBrush x:Key="OnPrimary" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="{StaticResource BgColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="{StaticResource TextColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="{StaticResource CardColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="{StaticResource TextColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.ControlDarkBrushKey}" Color="{StaticResource LineColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.GrayTextBrushKey}" Color="{StaticResource MutedColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="{StaticResource PrimaryColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{StaticResource NavSelectedColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="{StaticResource TextColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.MenuBrushKey}" Color="{StaticResource CardColor}"/>
+        <SolidColorBrush x:Key="{x:Static SystemColors.MenuTextBrushKey}" Color="{StaticResource TextColor}"/>
 
         <Style TargetType="Window">
             <Setter Property="Background" Value="{StaticResource Bg}"/>
@@ -383,6 +395,8 @@
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="CaretBrush" Value="{StaticResource Accent}"/>
+            <Setter Property="SelectionBrush" Value="{StaticResource Primary}"/>
+            <Setter Property="SelectionTextBrush" Value="{StaticResource OnPrimary}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -401,6 +415,56 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style TargetType="PasswordBox">
+            <Setter Property="Foreground" Value="{StaticResource Text}"/>
+            <Setter Property="Background" Value="{StaticResource BgRaised}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="CaretBrush" Value="{StaticResource Accent}"/>
+            <Setter Property="SelectionBrush" Value="{StaticResource Primary}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border x:Name="bd" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8">
+                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter TargetName="bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
+                                <Setter TargetName="bd" Property="BorderThickness" Value="1.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="ToolTip">
+            <Setter Property="Background" Value="{StaticResource Card}"/>
+            <Setter Property="Foreground" Value="{StaticResource Text}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style TargetType="ContextMenu">
+            <Setter Property="Background" Value="{StaticResource Card}"/>
+            <Setter Property="Foreground" Value="{StaticResource Text}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Line}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+
+        <Style TargetType="MenuItem">
+            <Setter Property="Foreground" Value="{StaticResource Text}"/>
+            <Setter Property="Background" Value="Transparent"/>
         </Style>
 
         <Style TargetType="ComboBoxItem">

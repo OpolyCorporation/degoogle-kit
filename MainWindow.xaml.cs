@@ -257,7 +257,7 @@ public partial class MainWindow : Window
             return;
         }
         StatApps.Text = "…";
-        PcSubtitle.Text = "Scanning Add/Remove Programs, folders, DNS, and scheduled tasks…";
+        PcSubtitle.Text = "Scanning installed programs, folders, services, Chrome extensions, DNS, and scheduled tasks…";
         Motion.ScanBusy(ScanRibbon, true);
         Motion.Pulse(CardApps, true);
         Motion.Pulse(CardBrowser, true);
@@ -279,6 +279,8 @@ public partial class MainWindow : Window
         _scan = snap;
         _apps.Clear();
         foreach (var app in snap.Apps) _apps.Add(app);
+        GoogleScanner.ApplyToPlan(snap, _planRows);
+        SavePlan();
 
         var realApps = snap.Apps.Count(a => !a.IsUpdater);
         StatApps.Text = realApps.ToString();
@@ -298,6 +300,35 @@ public partial class MainWindow : Window
         TaskText.Text = snap.GoogleTasks.Count == 0
             ? "No Google scheduled tasks found."
             : "Scheduled tasks: " + string.Join(", ", snap.GoogleTasks);
+
+        var extra = new List<string>();
+        if (snap.GoogleFolderChildren.Count > 0)
+            extra.Add("Under Google folders: " + string.Join(", ", snap.GoogleFolderChildren.Distinct().Take(16)));
+        if (snap.GoogleServices.Count > 0)
+            extra.Add("Windows services: " + string.Join(", ", snap.GoogleServices.Distinct().Take(12)));
+        if (snap.ChromeExtensions.Count > 0)
+            extra.Add("Chrome extensions (Google-related): " + string.Join(", ", snap.ChromeExtensions.Distinct().Take(12)));
+        if (snap.GoogleProcesses.Count > 0)
+            extra.Add("Running now: " + string.Join(", ", snap.GoogleProcesses.Distinct()));
+        if (snap.StartupEntries.Count > 0)
+            extra.Add("Starts with Windows: " + string.Join(", ", snap.StartupEntries.Distinct()));
+        if (snap.SignedInEmails.Count > 0)
+            extra.Add("Chrome still signed into: " + string.Join(", ", snap.SignedInEmails));
+        ExtraScanText.Text = extra.Count == 0
+            ? "No extra Google services, extensions, or leftover accounts found beyond the list below."
+            : string.Join("\n", extra);
+
+        if (CenterHint is not null)
+        {
+            var leftovers = new List<string>();
+            if (realApps > 0) leftovers.Add($"{realApps} Google app(s)");
+            if (snap.DefaultBrowserIsGoogle) leftovers.Add("Chrome is still the default browser");
+            if (snap.DnsLooksLikeGoogle) leftovers.Add("Google DNS");
+            if (snap.SignedInEmails.Count > 0) leftovers.Add("Chrome Google login");
+            CenterHint.Text = leftovers.Count == 0
+                ? "No Google desktop leftovers jumped out. Drop a Takeout zip to inventory Gmail, Photos, Drive, and the rest — parsed only on this PC."
+                : "Still on this PC: " + string.Join(" · ", leftovers) + ". Drop a Takeout zip to count mail, photos, and files before you disconnect anything.";
+        }
 
         DnsText.Text = snap.DnsServers.Count == 0
             ? "Could not read DNS for the active adapter."
@@ -325,6 +356,11 @@ public partial class MainWindow : Window
         StatBrowserNote.Text = "Not scanned.";
         PcSubtitle.Text = "This PC has not been scanned.";
         SidebarHint.Text = "Nothing is scanned or changed until you allow it.";
+        if (FolderText is not null) FolderText.Text = "";
+        if (TaskText is not null) TaskText.Text = "";
+        if (ExtraScanText is not null) ExtraScanText.Text = "";
+        if (CenterHint is not null)
+            CenterHint.Text = "Scan this PC (or drop a Takeout zip) to see what is actually here. Nothing is sent to our servers.";
     }
 
     private void UpdateGuideStats()
@@ -366,7 +402,7 @@ public partial class MainWindow : Window
         if (sender is Button { Tag: string url }) TryOpenUri(url);
     }
 
-    private void OnUninstall(object sender, RoutedEventArgs e)
+    private async void OnUninstall(object sender, RoutedEventArgs e)
     {
         if (sender is not Button { Tag: DetectedApp app }) return;
 
@@ -393,6 +429,22 @@ public partial class MainWindow : Window
         {
             LaunchUninstall(app.UninstallString);
             PrivacyStore.Log("uninstall_started", app.Name);
+            var again = MessageBox.Show(
+                "Windows opened the official uninstaller for " + app.Name +
+                ".\n\nFinish that window, then click Yes so DeGoogle Kit can scan this PC again and tell you whether it is still installed. Profiles are not deleted.",
+                "Uninstall started",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information);
+            if (again != MessageBoxResult.Yes) return;
+            await RunScanAsync();
+            var still = _apps.Any(a => a.Name.Equals(app.Name, StringComparison.OrdinalIgnoreCase));
+            MessageBox.Show(
+                still
+                    ? app.Name + " is still listed in installed programs. If the uninstaller is still open, finish it and Scan again."
+                    : app.Name + " is no longer in Add/Remove Programs. Folders or Chrome profiles may still be on disk — check This PC.",
+                "Scan after uninstall",
+                MessageBoxButton.OK,
+                still ? MessageBoxImage.Warning : MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
@@ -597,7 +649,7 @@ public partial class MainWindow : Window
         MessageBox.Show("Copied. Export via Takeout before you send an erasure request.", "Clipboard");
     }
 
-    private void OnApplyDns(object sender, RoutedEventArgs e)
+    private async void OnApplyDns(object sender, RoutedEventArgs e)
     {
         if (!RequirePro()) return;
         if (!AskAccess.For(this, AccessKind.DnsChange,
@@ -605,8 +657,11 @@ public partial class MainWindow : Window
             return;
         try
         {
-            DnsService.ApplyQuad9("");
-            MessageBox.Show("Quad9 requested. If UAC was approved, reconnect or wait a few seconds, then Scan again.", "DNS");
+            var result = DnsService.ApplyQuad9("");
+            MessageBox.Show(result.Message, "DNS",
+                MessageBoxButton.OK,
+                result.Ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
+            await RunScanAsync();
         }
         catch (Exception ex)
         {
@@ -614,67 +669,79 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnRestoreDns(object sender, RoutedEventArgs e)
+    private async void OnRestoreDns(object sender, RoutedEventArgs e)
     {
         if (!AskAccess.For(this, AccessKind.DnsChange,
                 "Restore the DNS servers we saved before Quad9? Windows will ask for administrator permission."))
             return;
-        if (!DnsService.Restore())
-        {
-            MessageBox.Show("No DNS backup found yet. Apply Quad9 once first.", "DNS");
-            return;
-        }
-        MessageBox.Show("Restore requested. Approve UAC if Windows asks.", "DNS");
+        var result = DnsService.Restore();
+        MessageBox.Show(result.Message, "DNS",
+            MessageBoxButton.OK,
+            result.Ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
+        await RunScanAsync();
     }
 
-    private void OnPickTakeoutFolder(object sender, RoutedEventArgs e)
+    private async void OnPickTakeoutFolder(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFolderDialog { Title = "Google Takeout folder" };
         if (dialog.ShowDialog() != true) return;
-        LoadTakeout(dialog.FolderName);
+        await LoadTakeoutAsync(dialog.FolderName);
     }
 
-    private void OnPickTakeoutZip(object sender, RoutedEventArgs e)
+    private async void OnPickTakeoutZip(object sender, RoutedEventArgs e)
     {
         var dialog = new OpenFileDialog { Filter = "Takeout zip|*.zip", Title = "Google Takeout zip" };
         if (dialog.ShowDialog() != true) return;
-        LoadTakeout(dialog.FileName);
+        await LoadTakeoutAsync(dialog.FileName);
     }
 
-    private void LoadTakeout(string path)
+    private async Task LoadTakeoutAsync(string path)
     {
         if (!AskAccess.For(this, AccessKind.TakeoutRead, path))
             return;
+        TakeoutDropHint.Text = "Reading locally… " + path;
+        GuideBar.IsIndeterminate = true;
+        TakeoutInventory inv;
         try
         {
-        TakeoutDropHint.Text = "Reading locally… " + path;
-            var inv = TakeoutEngine.Analyze(path);
-            _inventory = inv;
-            TakeoutSummary.Text = inv.Summary;
-            PasswordWarn.Text = inv.HasPasswordCsv
-                ? "⚠️ A Chrome password CSV is in this archive. It is readable plaintext. Import into Proton Pass or Bitwarden, then delete the CSV."
-                : "";
-            _takeout.Clear();
-            foreach (var id in inv.DetectedServiceIds)
-            {
-                var def = ServiceCatalog.V1.FirstOrDefault(s => s.Id == id);
-                _takeout.Add(new TakeoutEntry
-                {
-                    Name = def?.GoogleName ?? id,
-                    Hint = def?.How ?? "Detected in Takeout",
-                    SizeBytes = 0
-                });
-            }
-            ApplyInventoryToPlan(inv);
-            PrivacyStore.Log("takeout_scanned", path);
-            NavTakeout.IsChecked = true;
-            Motion.Pop(TakeoutDrop);
-            TakeoutDropHint.Text = "Drop takeout-….zip here, or click to pick a file. Reading happens locally.";
+            inv = await Task.Run(() => TakeoutEngine.Analyze(path));
         }
         catch (Exception ex)
         {
+            GuideBar.IsIndeterminate = false;
+            TakeoutDropHint.Text = "Drop takeout-….zip here, or click to pick a file. Reading happens locally.";
             MessageBox.Show(ex.Message, "Takeout", MessageBoxButton.OK, MessageBoxImage.Error);
+            return;
         }
+        finally
+        {
+            GuideBar.IsIndeterminate = false;
+        }
+
+        _inventory = inv;
+        TakeoutSummary.Text = inv.Summary;
+        PasswordWarn.Text = inv.HasPasswordCsv
+            ? "⚠️ A Chrome password CSV is in this archive. It is readable plaintext. Import into Proton Pass or Bitwarden, then delete the CSV."
+            : "";
+        _takeout.Clear();
+        if (inv.Bundles.Count > 0)
+        {
+            foreach (var bundle in inv.Bundles)
+                _takeout.Add(bundle);
+        }
+        else
+        {
+            foreach (var id in inv.DetectedServiceIds)
+            {
+                var def = ServiceCatalog.V1.FirstOrDefault(s => s.Id == id);
+                _takeout.Add(TakeoutService.Entry(def?.GoogleName ?? id, 0));
+            }
+        }
+        ApplyInventoryToPlan(inv);
+        PrivacyStore.Log("takeout_scanned", path);
+        NavTakeout.IsChecked = true;
+        Motion.Pop(TakeoutDrop);
+        TakeoutDropHint.Text = "Drop takeout-….zip here, or click to pick a file. Reading happens locally.";
     }
 
     private void ApplyInventoryToPlan(TakeoutInventory inv)
@@ -690,7 +757,7 @@ public partial class MainWindow : Window
         UpdateGuideStats();
     }
 
-    private void OnNormalizeTakeout(object sender, RoutedEventArgs e)
+    private async void OnNormalizeTakeout(object sender, RoutedEventArgs e)
     {
         if (_inventory is null || string.IsNullOrWhiteSpace(_inventory.SourcePath))
         {
@@ -699,9 +766,13 @@ public partial class MainWindow : Window
         }
         if (!AskAccess.For(this, AccessKind.TakeoutConvert))
             return;
+        TakeoutDropHint.Text = "Converting locally…";
+        GuideBar.IsIndeterminate = true;
         try
         {
-            var dest = TakeoutEngine.Normalize(_inventory.SourcePath, _inventory);
+            var source = _inventory.SourcePath;
+            var inv = _inventory;
+            var dest = await Task.Run(() => TakeoutEngine.Normalize(source, inv));
             MessageBox.Show(
                 "Converted on this PC:\n" + dest +
                 "\n\nIncludes Keep → Markdown, Maps → GPX/KML/GeoJSON/CSV, YouTube subscriptions → OPML, and a password CSV warning if present.\n\nOpen the destination app and import. Do not delete Google yet.",
@@ -711,6 +782,11 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             MessageBox.Show(ex.Message, "Convert", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            GuideBar.IsIndeterminate = false;
+            TakeoutDropHint.Text = "Drop takeout-….zip here, or click to pick a file. Reading happens locally.";
         }
     }
 
@@ -729,12 +805,12 @@ public partial class MainWindow : Window
         Motion.Pulse(TakeoutDrop, false);
     }
 
-    private void OnDrop(object sender, DragEventArgs e)
+    private async void OnDrop(object sender, DragEventArgs e)
     {
         _dropLit = false;
         Motion.Pulse(TakeoutDrop, false);
         if (e.Data.GetData(DataFormats.FileDrop) is not string[] files || files.Length == 0) return;
-        LoadTakeout(files[0]);
+        await LoadTakeoutAsync(files[0]);
     }
 
     private void RebuildPlan()
@@ -828,23 +904,98 @@ public partial class MainWindow : Window
         if (!AskAccess.For(this, AccessKind.DesktopExport,
                 "Write an HTML report to your Desktop? It can include app names from this PC."))
             return;
-        var path = ReportService.Write(_scan, _guide, _takeout);
+        var path = ReportService.Write(_scan, _guide, _takeout, _planRows);
         MessageBox.Show("Saved to:\n" + path, "Report");
         TryOpenUri(path);
     }
 
-    private void OnStartTrial(object sender, RoutedEventArgs e)
+    private async void OnStartTrial(object sender, RoutedEventArgs e)
     {
-        if (!AskAccess.For(this, AccessKind.ChangeLicense,
-                "Start a 14-day trial of Lifetime Pro on this PC? No card is stored. Cloud Pass is not included."))
+        if (!AccountService.IsSignedIn)
+        {
+            var go = MessageBox.Show(
+                "A free account is required to start the " + LicenseService.TrialDays +
+                "-day Pro trial. Sign in or create one now? No card is stored.",
+                "Trial",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Information);
+            if (go != MessageBoxResult.Yes) return;
+            if (!AskAccess.For(this, AccessKind.AccountCloud))
+                return;
+            var dialog = new AccountDialog { Owner = this };
+            if (dialog.ShowDialog() != true || !AccountService.IsSignedIn)
+                return;
+            RefreshAccountUi();
+            _ = AccountService.TouchKeepaliveAsync();
+            await RestoreAccountProgressAsync(interactive: false);
+            await RestoreAccountLicenseAsync();
+            RefreshLicenseUi();
+        }
+
+        if (LicenseService.IsPro && LicenseService.Record.Lifetime)
+        {
+            MessageBox.Show("This PC already has Lifetime Pro.", "Trial");
             return;
+        }
+
+        if (!AskAccess.For(this, AccessKind.ChangeLicense,
+                "Start a " + LicenseService.TrialDays + "-day trial of Lifetime Pro on this account? No card is stored. Cloud Pass is not included."))
+            return;
+
+        var pull = await AccountService.PullProgressAsync();
+        if (!pull.Ok)
+        {
+            MessageBox.Show(pull.Message, "Trial");
+            return;
+        }
+        if (pull.Data?.TrialStartedAt is { } already)
+        {
+            LicenseService.ApplyCloudTrial(already);
+            RefreshLicenseUi();
+            MessageBox.Show(
+                LicenseService.IsPro
+                    ? "Your Pro trial is already running on this account."
+                    : "This account already used the Pro trial.",
+                "Trial");
+            return;
+        }
+
+        if (LicenseService.IsPro)
+        {
+            MessageBox.Show("Pro extras are already on (" + LicenseService.StatusText + ").", "Trial");
+            return;
+        }
+        if (LicenseService.Record.TrialEnds is not null)
+        {
+            MessageBox.Show("A trial was already used on this PC.", "Trial");
+            return;
+        }
+
+        var claim = await AccountService.ClaimTrialAsync(ProgressCloud.GuideIds(_guide), _planState);
+        if (claim.StartedAt is { } startedFromCloud && !claim.Ok)
+        {
+            LicenseService.ApplyCloudTrial(startedFromCloud);
+            RefreshLicenseUi();
+            MessageBox.Show(
+                LicenseService.IsPro
+                    ? "Your Pro trial is already running on this account."
+                    : "This account already used the Pro trial.",
+                "Trial");
+            return;
+        }
+        if (!claim.Ok)
+        {
+            MessageBox.Show(claim.Message, "Trial");
+            return;
+        }
+
         if (!LicenseService.StartTrial())
         {
-            MessageBox.Show("A trial was already used on this PC. That is intentional so trials are not endless.", "Trial");
+            MessageBox.Show("A trial was already used on this PC.", "Trial");
             return;
         }
         RefreshLicenseUi();
-        MessageBox.Show("Lifetime Pro extras are on for 14 days. No card was stored.", "Trial");
+        MessageBox.Show("Lifetime Pro extras are on for " + LicenseService.TrialDays + " days. No card was stored.", "Trial");
     }
 
     private void OnBuyLifetime(object sender, RoutedEventArgs e)
@@ -1011,6 +1162,11 @@ public partial class MainWindow : Window
                 RebuildPlan();
                 ApplyModeRadios();
                 UpdateGuideStats();
+                if (remote.TrialStartedAt is { } trialAt)
+                {
+                    LicenseService.ApplyCloudTrial(trialAt);
+                    RefreshLicenseUi();
+                }
             }
         }
         finally
@@ -1120,7 +1276,9 @@ public partial class MainWindow : Window
     {
         if (LicenseService.IsPro) return true;
         NavPro.IsChecked = true;
-        MessageBox.Show("That feature is Lifetime Pro (€19 once). Start the 14-day trial (no card) or activate a key. Scan, plan, Takeout, local coach, and GDPR stay free.",
+        MessageBox.Show("That feature is Lifetime Pro (" + LicenseService.LifetimePrice +
+                        " once). Sign in to start the " + LicenseService.TrialDays +
+                        "-day trial (no card) or activate a key. Scan, plan, Takeout, local coach, and GDPR stay free.",
             "Pro", MessageBoxButton.OK, MessageBoxImage.Information);
         return false;
     }

@@ -135,7 +135,7 @@
                     <Border x:Name="CardCenter" Style="{StaticResource CardBorder}" Margin="10,10,0,0">
                         <StackPanel>
                             <TextBlock Text="Centerpiece" Foreground="{StaticResource Muted}"/>
-                            <TextBlock Text="Drop your Google Takeout here. We'll figure out the rest — on this PC, never on our servers." FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,12"/>
+                            <TextBlock x:Name="CenterHint" Text="Drop your Google Takeout here. We'll figure out the rest — on this PC, never on our servers." FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,12"/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Open Takeout drop" Style="{StaticResource PrimaryBtn}" Click="OnOpenTakeout" Margin="0,0,8,0"/>
                                 <Button Content="Your plan" Style="{StaticResource GhostBtn}" Click="OnOpenPlan"/>
@@ -226,9 +226,10 @@
                     <StackPanel>
                         <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
                             <StackPanel>
-                                <TextBlock Text="Folders &amp; scheduled tasks" FontWeight="SemiBold"/>
+                                <TextBlock Text="What this PC still has" FontWeight="SemiBold"/>
                                 <TextBlock x:Name="FolderText" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                                 <TextBlock x:Name="TaskText" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,4,0,0"/>
+                                <TextBlock x:Name="ExtraScanText" Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,0"/>
                             </StackPanel>
                         </Border>
                         <ItemsControl x:Name="AppList">
@@ -495,15 +496,15 @@
                         </Border>
                         <Border x:Name="ProLifetimeCard" Style="{StaticResource CardBorder}">
                             <StackPanel>
-                                <TextBlock Text="Lifetime Pro — €19 once (family €39, up to 3 PCs)" FontWeight="SemiBold"/>
+                                <TextBlock Text="Lifetime Pro — €29.99 once (family €59.99, up to 3 PCs)" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
                                     Pay with Stripe Checkout in your browser. After payment, this app fills the signed license key below and turns Pro on. Sign in first if you want that Pro license on other PCs too. You can also paste a key (DGK2…) or a Checkout session id (cs_…).
                                 </TextBlock>
-                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout opens Stripe in your browser. Cards never touch this app. By paying you agree to the terms (v2). EU/EEA: 14 days to withdraw if the key is not activated. Cloud Pass is not billed until hosted AI actually runs. EU VAT: add a Stripe Tax registration before turning automatic tax on."/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout opens Stripe in your browser. Cards never touch this app. By paying you agree to the terms (v3). EU/EEA: 14 days to withdraw if the key is not activated. Cloud Pass is not billed until hosted AI actually runs. EU VAT: add a Stripe Tax registration before turning automatic tax on."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                    <Button Content="Buy Lifetime €19" Style="{StaticResource PrimaryBtn}" Click="OnBuyLifetime" Margin="0,0,8,0"/>
-                                    <Button Content="Buy Family €39" Style="{StaticResource GhostBtn}" Click="OnBuyFamily" Margin="0,0,8,0"/>
-                                    <Button Content="Start 14-day trial" Style="{StaticResource GhostBtn}" Click="OnStartTrial"/>
+                                    <Button Content="Buy Lifetime €29.99" Style="{StaticResource PrimaryBtn}" Click="OnBuyLifetime" Margin="0,0,8,0"/>
+                                    <Button Content="Buy Family €59.99" Style="{StaticResource GhostBtn}" Click="OnBuyFamily" Margin="0,0,8,0"/>
+                                    <Button Content="Start 7-day trial" Style="{StaticResource GhostBtn}" Click="OnStartTrial"/>
                                 </StackPanel>
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right" Content="Activate license" Style="{StaticResource PrimaryBtn}" Click="OnActivateKey" Margin="8,0,0,0"/>
@@ -568,7 +569,7 @@
                             <StackPanel>
                                 <TextBlock Text="Legal" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"
-                                           Text="Privacy notice v2 covers local files, the optional free account (Supabase), Stripe payments, and GitHub updates. Terms cover the 14-day EU withdrawal for an unused license key."/>
+                                           Text="Privacy notice v3 covers local files, the optional free account (Supabase, including trial start on that account), Stripe payments, and GitHub updates. Terms cover the 14-day EU withdrawal for an unused license key."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <Button Content="Open privacy notice" Style="{StaticResource GhostBtn}" Click="OnOpenPrivacyNotice" Margin="0,0,8,0"/>
                                     <Button Content="Open terms" Style="{StaticResource GhostBtn}" Click="OnOpenTerms"/>

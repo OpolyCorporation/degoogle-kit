@@ -7,6 +7,7 @@ public sealed class CloudProgress
     public List<string> GuideDone { get; set; } = [];
     public PlanState Plan { get; set; } = new();
     public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? TrialStartedAt { get; set; }
 }
 
 public static class ProgressCloud

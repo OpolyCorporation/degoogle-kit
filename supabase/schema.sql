@@ -47,6 +47,7 @@ create table if not exists public.progress (
   user_id uuid primary key references auth.users (id) on delete cascade,
   guide_done jsonb not null default '[]'::jsonb,
   plan jsonb not null default '{}'::jsonb,
+  trial_started_at timestamptz,
   updated_at timestamptz not null default now()
 );
 
@@ -61,7 +62,7 @@ create policy progress_own on public.progress
 grant select, insert, update, delete on table public.progress to authenticated;
 
 comment on table public.progress is
-  'Free-tier backup: guide checklist + plan only. No API keys, Takeout files, or license keys.';
+  'Free-tier backup: guide checklist + plan + whether this account started the Pro trial. No API keys, Takeout files, or license keys.';
 
 create table if not exists public.licenses (
   user_id uuid primary key references auth.users (id) on delete cascade,

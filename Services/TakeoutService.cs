@@ -40,11 +40,11 @@ public static class TakeoutService
         foreach (var dir in Directory.GetDirectories(path))
         {
             var name = Path.GetFileName(dir);
-            entries.Add(NewEntry(name, DirSize(dir)));
+            entries.Add(Entry(name, DirSize(dir)));
         }
         foreach (var file in Directory.GetFiles(path))
         {
-            entries.Add(NewEntry(Path.GetFileName(file), new FileInfo(file).Length));
+            entries.Add(Entry(Path.GetFileName(file), new FileInfo(file).Length));
         }
         return entries.OrderByDescending(e => e.SizeBytes).ToList();
     }
@@ -61,10 +61,10 @@ public static class TakeoutService
             bags.TryGetValue(folder, out var n);
             bags[folder] = n + entry.Length;
         }
-        return bags.Select(kv => NewEntry(kv.Key, kv.Value)).OrderByDescending(e => e.SizeBytes).ToList();
+        return bags.Select(kv => Entry(kv.Key, kv.Value)).OrderByDescending(e => e.SizeBytes).ToList();
     }
 
-    private static TakeoutEntry NewEntry(string name, long size) =>
+    public static TakeoutEntry Entry(string name, long size) =>
         new()
         {
             Name = name,

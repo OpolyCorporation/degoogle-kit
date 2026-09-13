@@ -17,10 +17,11 @@ public sealed class LicenseRecord
 
 public static class LicenseService
 {
-    public const string LifetimePrice = "€19";
-    public const string FamilyPrice = "€39";
+    public const string LifetimePrice = "€29.99";
+    public const string FamilyPrice = "€59.99";
     public const string CloudMonthly = "€4.99 / month";
     public const string CloudYearly = "€39 / year";
+    public const int TrialDays = 7;
 
     public static LicenseRecord Record => JsonFile.Load(AppPaths.License, new LicenseRecord());
 
@@ -74,10 +75,24 @@ public static class LicenseService
         if (r.Lifetime) return false;
         if (r.TrialEnds is not null) return false;
         r.Plan = "Trial";
-        r.TrialEnds = DateTime.Today.AddDays(14);
+        r.TrialEnds = DateTime.Now.AddDays(TrialDays);
         JsonFile.Save(AppPaths.License, r);
-        PrivacyStore.Log("trial_started", r.TrialEnds.Value.ToString("d"));
+        PrivacyStore.Log("trial_started", r.TrialEnds.Value.ToString("u"));
         return true;
+    }
+
+    public static void ApplyCloudTrial(DateTimeOffset startedAt)
+    {
+        var r = Record;
+        if (r.Lifetime && r.Plan.Equals("Pro", StringComparison.OrdinalIgnoreCase)) return;
+        var ends = startedAt.LocalDateTime.AddDays(TrialDays);
+        if (r.TrialEnds is { } local && local > DateTime.Now) return;
+        r.TrialEnds = ends;
+        if (ends > DateTime.Now)
+            r.Plan = "Trial";
+        else if (r.Plan.Equals("Trial", StringComparison.OrdinalIgnoreCase))
+            r.Plan = "Free";
+        JsonFile.Save(AppPaths.License, r);
     }
 
     public static bool Activate(string key)
