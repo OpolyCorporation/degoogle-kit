@@ -3,7 +3,7 @@
 param(
     [string]$Version = "",
     [string]$Changelog = "Bug fixes and improvements.",
-    [string]$Repo = "jackj/degoogle-kit",
+    [string]$Repo = "OpolyCorporation/degoogle-kit",
     [switch]$SkipGitHub
 )
 
@@ -25,6 +25,17 @@ if (Test-Path $zip) { Remove-Item $zip -Force }
 Write-Host "Publishing $Version..."
 dotnet publish $csproj -c Release -r win-x64 --self-contained true -o $outDir -p:Version=$Version -p:InformationalVersion=$Version
 if ($LASTEXITCODE -ne 0) { throw "publish failed" }
+
+@'
+DeGoogle Kit for Windows
+========================
+1. Unzip this folder anywhere you like.
+2. Double-click DeGoogleKit.exe. You do not need to install .NET.
+3. If Windows SmartScreen says it is an unrecognized app, choose More info → Run anyway. Builds are not code-signed yet.
+
+Download later builds from:
+https://github.com/OpolyCorporation/degoogle-kit/releases/latest
+'@ | Set-Content -Path (Join-Path $outDir "README.txt") -Encoding UTF8
 
 if (Test-Path $zip) { Remove-Item $zip -Force }
 Add-Type -AssemblyName System.IO.Compression.FileSystem

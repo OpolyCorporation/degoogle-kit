@@ -1,7 +1,7 @@
-{
-  "version": "0.3.0",
-  "releasedAt": "2026-09-13",
-  "changelog": "Brand theme (navy, toolbox blue, mint). Local Takeout converter. GDPR tools.",
-  "downloadUrl": "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.3.0/DeGoogleKit-win-x64.zip",
-  "sha256": ""
+﻿{
+    "changelog":  "First public Windows build: scan, plan, Takeout parse, Stripe test checkout.",
+    "sha256":  "081acbe6e8b5258c55c1e0e7af8b9e773765f8d76f6cbe63cb91567a82031ee1",
+    "downloadUrl":  "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.3.0/DeGoogleKit-win-x64.zip",
+    "version":  "0.3.0",
+    "releasedAt":  "2026-09-13"
 }

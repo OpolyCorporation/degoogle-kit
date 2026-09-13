@@ -28,4 +28,9 @@ jobs:
         shell: pwsh
         run: |
           $tag = "${{ github.ref_name }}"
-          gh release create $tag artifacts/DeGoogleKit-win-x64.zip artifacts/latest.json --title "DeGoogle Kit ${tag}" --generate-notes
+          $files = @("artifacts/DeGoogleKit-win-x64.zip", "artifacts/latest.json")
+          if (gh release view $tag --json tagName 2>$null) {
+            gh release upload $tag @files --clobber
+          } else {
+            gh release create $tag @files --title "DeGoogle Kit $tag" --generate-notes
+          }
