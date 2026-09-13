@@ -9,9 +9,12 @@
     <DockPanel Margin="28">
         <StackPanel DockPanel.Dock="Bottom">
             <CheckBox x:Name="AgeBox" Content="I am 16 or older, or I have a parent/guardian’s consent (GDPR Art. 8)." Margin="0,0,0,8"/>
-            <CheckBox x:Name="LocalBox" Content="I understand this app stores data only on this PC, in AppData\DeGoogleKit." Margin="0,0,0,8"/>
+            <CheckBox x:Name="LocalBox" Content="I understand this app stores data on this PC (AppData\DeGoogleKit). An account is optional and asked separately." Margin="0,0,0,8"/>
             <CheckBox x:Name="ScanBox" Content="Allow a read-only scan of this PC (programs, default browser, Google folders, tasks, DNS)." Margin="0,0,0,8"/>
-            <CheckBox x:Name="PrivacyBox" Content="I have read the privacy notice and I agree (GDPR Arts. 7 and 13)." Margin="0,0,0,14"/>
+            <CheckBox x:Name="PrivacyBox" Content="I have read the privacy notice (v2) and I agree (GDPR Arts. 7 and 13)." Margin="0,0,0,8"/>
+            <CheckBox x:Name="SupabaseBox" Margin="0,0,0,14">
+                <TextBlock TextWrapping="Wrap" Text="Allow this app to use Supabase (not Google) for an optional free account. Leave unticked to stay local-only. You can change this later in Privacy or when you sign in."/>
+            </CheckBox>
             <TextBlock Text="Optional — after this screen the app is ready. Pro is not required." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
             <CheckBox x:Name="DesktopShortcutBox" Content="Add a Desktop shortcut to DeGoogleKit.exe" IsChecked="True" Margin="0,0,0,8"/>
             <CheckBox x:Name="StartMenuShortcutBox" Content="Add a Start menu shortcut" IsChecked="True" Margin="0,0,0,14"/>
@@ -34,19 +37,12 @@
                     </StackPanel>
                 </StackPanel>
                 <TextBlock Text="Before we start" FontSize="22" FontWeight="SemiBold"/>
-                <TextBlock Text="DeGoogle Kit is a local tool. Boxes start unchecked — that is required for valid consent." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,16"/>
+                <TextBlock Text="DeGoogle Kit is a local tool by default. Required boxes start unchecked — GDPR needs consent that is specific, informed, and freely given." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,16"/>
                 <Border Style="{StaticResource CardBorder}">
-                    <TextBlock TextWrapping="Wrap" FontSize="13" LineHeight="20">
-                        <Run FontWeight="SemiBold" Text="Privacy notice (v1)"/><LineBreak/><LineBreak/>
-                        <Run Text="Who: You run this software on your computer. There is no DeGoogle Kit cloud account."/><LineBreak/><LineBreak/>
-                        <Run Text="What we store: guide checkmarks, optional Pro/trial status, an action log, optional AI settings, DNS backups if you use that feature, and an update schedule if you check for updates. No analytics, no ads, no Google APIs."/><LineBreak/><LineBreak/>
-                        <Run Text="Updates: Check for updates is optional. It fetches a version file from our GitHub release feed (HTTPS, not Google). You choose now, later, or midnight before anything is installed."/><LineBreak/><LineBreak/>
-                        <Run Text="Permissions: the app asks before it scans this PC, opens a site, uses the clipboard, checks for updates, reads Takeout, writes files, stores keys, uninstalls, changes DNS, or sends Cloud AI. You can revoke remembered allows in Privacy."/><LineBreak/><LineBreak/>
-                        <Run Text="Your rights: access, portability, and erasure are in the Privacy tab (export zip or delete all local data). You can withdraw Cloud AI consent anytime."/><LineBreak/><LineBreak/>
-                        <Run Text="Children: not directed at children under 16 without a guardian."/><LineBreak/><LineBreak/>
-                        <Run Text="Paid features: Lifetime Pro is a one-time Stripe Checkout license. Cloud Pass is a subscription only if we run hosted AI (we pay the model). Trial and keys stay on this PC. We do not store card numbers. Payments go through Stripe Checkout, never Google Pay as the core processor."/><LineBreak/><LineBreak/>
-                        <Run Text="Complaints: Datatilsynet (Denmark) https://www.datatilsynet.dk/"/>
-                    </TextBlock>
+                    <TextBox x:Name="NoticeBox" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
+                             VerticalScrollBarVisibility="Auto" Height="280" BorderThickness="0"
+                             Background="Transparent" Foreground="{StaticResource Text}" FontSize="13"
+                             CaretBrush="{StaticResource Text}"/>
                 </Border>
             </StackPanel>
         </ScrollViewer>

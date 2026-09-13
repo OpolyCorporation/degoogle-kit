@@ -17,7 +17,9 @@ public enum AccessKind
     EraseAppData,
     InstallUpdate,
     CloudAiSend,
-    ChangeLicense
+    ChangeLicense,
+    AccountCloud,
+    DeleteAccount
 }
 
 public sealed class PermissionGrants
@@ -29,11 +31,17 @@ public sealed class PermissionGrants
     public bool? TakeoutRead { get; set; }
     public bool? DesktopExport { get; set; }
     public bool? StoreSecrets { get; set; }
+    public bool? AccountCloud { get; set; }
 }
 
 public static class PermissionService
 {
     public static PermissionGrants Grants => JsonFile.Load(AppPaths.Permissions, new PermissionGrants());
+
+    public static bool SessionAccountCloud { get; set; }
+
+    public static bool AccountCloudGranted =>
+        Get(AccessKind.AccountCloud) == true || SessionAccountCloud;
 
     public static void Set(AccessKind kind, bool allowed)
     {
@@ -50,6 +58,10 @@ public static class PermissionService
             case AccessKind.TakeoutRead: g.TakeoutRead = allowed; break;
             case AccessKind.DesktopExport: g.DesktopExport = allowed; break;
             case AccessKind.StoreSecret: g.StoreSecrets = allowed; break;
+            case AccessKind.AccountCloud:
+                g.AccountCloud = allowed;
+                SessionAccountCloud = allowed;
+                break;
         }
         JsonFile.Save(AppPaths.Permissions, g);
         PrivacyStore.Log("permission_set", kind + "=" + allowed);
@@ -64,6 +76,7 @@ public static class PermissionService
         AccessKind.TakeoutRead => Grants.TakeoutRead,
         AccessKind.DesktopExport => Grants.DesktopExport,
         AccessKind.StoreSecret => Grants.StoreSecrets,
+        AccessKind.AccountCloud => Grants.AccountCloud,
         _ => null
     };
 
@@ -159,8 +172,8 @@ public static class PermissionService
             ChangesSystem: true),
         AccessKind.EraseAppData => new(
             "Erase DeGoogle Kit data",
-            "Delete all DeGoogle Kit data on this PC (progress, license, keys, logs, conversions) and close the app?",
-            "The folder AppData\\DeGoogleKit.",
+            extra ?? "Delete all DeGoogle Kit data on this PC (progress, license, keys, logs, conversions) and close the app?",
+            "The folder AppData\\DeGoogleKit. This does not delete your cloud account unless you also choose that.",
             "That folder will be permanently deleted. Google accounts are not touched. This cannot be undone from the app.",
             Rememberable: false,
             ChangesSystem: true),
@@ -185,6 +198,21 @@ public static class PermissionService
             "Trial or Pro status on this PC will change. No card is stored here.",
             Rememberable: false,
             ChangesSystem: true),
+        AccessKind.AccountCloud => new(
+            "Permission to use Supabase",
+            extra ?? "Allow DeGoogle Kit to use Supabase (not Google) for an optional free account? Email, plan, and checklist can sync. Paying is optional. You can refuse and keep using the app locally.",
+            "Supabase Auth and database over HTTPS. Processor: Supabase, for Opolyonix Corp. Not Google. Session tokens stay on this PC (DPAPI). Scan data, Takeout files, and API keys are not sent.",
+            "If you allow this, the app may contact Supabase when you sign in, restore a backup, or save plan/checklist. You can revoke this in Privacy or delete the account.",
+            Rememberable: true,
+            ChangesSystem: false,
+            AllowLabel: "Allow Supabase"),
+        AccessKind.DeleteAccount => new(
+            "Delete my DeGoogle Kit cloud account",
+            extra ?? "Permanently delete your cloud account (email, plan backup, linked Pro key on the account)? This PC’s local files stay unless you also erase them.",
+            "Supabase Auth and the progress/licenses rows for your user (HTTPS, not Google).",
+            "The account cannot be recovered. You can keep using the app locally.",
+            Rememberable: false,
+            ChangesSystem: true),
         _ => new("Permission", "Allow this action?", "This PC.", "", false, false)
     };
 
@@ -194,5 +222,6 @@ public static class PermissionService
         string Access,
         string Change,
         bool Rememberable,
-        bool ChangesSystem);
+        bool ChangesSystem,
+        string? AllowLabel = null);
 }

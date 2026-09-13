@@ -20,18 +20,23 @@
   <ItemGroup>
     <Compile Remove="Licensing\**" />
     <Compile Remove="license-api\**" />
+    <Compile Remove="supabase\**" />
     <None Remove="Licensing\**" />
     <None Remove="license-api\**" />
+    <None Remove="supabase\**" />
     <EmbeddedResource Remove="Licensing\**" />
     <EmbeddedResource Remove="license-api\**" />
+    <EmbeddedResource Remove="supabase\**" />
     <Page Remove="Licensing\**" />
     <Page Remove="license-api\**" />
+    <Page Remove="supabase\**" />
   </ItemGroup>
 
   <ItemGroup>
     <Resource Include="Assets\brand.png" />
     <Resource Include="Assets\app.ico" />
     <Content Include="updates\feed.url" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="cloud\supabase.json" CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="Licensing\DeGoogleKit.Licensing.csproj" />
   </ItemGroup>
 

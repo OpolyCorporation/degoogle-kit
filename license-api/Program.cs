@@ -1,6 +1,7 @@
 using DeGoogleKit.Licensing;
 using Stripe;
 using Stripe.Checkout;
+using System.Net.Http;
 using System.Text.Json;
 
 LoadDotEnvWalk(Directory.GetCurrentDirectory());
@@ -72,6 +73,55 @@ app.MapMethods("/v1/license", ["GET", "POST"], async (HttpRequest request, IConf
     }
 });
 
+app.MapPost("/v1/account/bind", async (HttpRequest request, IConfiguration config) =>
+{
+    var supabaseUrl = (Environment.GetEnvironmentVariable("SUPABASE_URL") ?? config["Supabase:Url"] ?? "").Trim().TrimEnd('/');
+    var service = Environment.GetEnvironmentVariable("SUPABASE_SERVICE_ROLE_KEY") ?? config["Supabase:ServiceRoleKey"];
+    var anon = Environment.GetEnvironmentVariable("SUPABASE_ANON_KEY") ?? config["Supabase:AnonKey"];
+    if (string.IsNullOrWhiteSpace(supabaseUrl) || string.IsNullOrWhiteSpace(service) || string.IsNullOrWhiteSpace(anon))
+        return Results.Json(new { error = "License API is missing SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY." }, statusCode: 503);
+
+    var auth = request.Headers.Authorization.ToString();
+    if (string.IsNullOrWhiteSpace(auth) || !auth.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        return Results.Json(new { error = "Sign in first." }, statusCode: 401);
+    var jwt = auth["Bearer ".Length..].Trim();
+
+    string json;
+    using (var reader = new StreamReader(request.Body))
+        json = await reader.ReadToEndAsync();
+    using var body = JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json);
+    var key = body.RootElement.TryGetProperty("key", out var keyEl) ? keyEl.GetString() ?? "" : "";
+    if (!LicenseTicket.TryVerify(key, out var payload) || !LicenseTicket.IsPaidPro(payload))
+        return Results.Json(new { error = "That is not a valid paid DeGoogle Kit key." }, statusCode: 400);
+
+    var user = await SupabaseUserId(supabaseUrl, anon, jwt);
+    if (user is null)
+        return Results.Json(new { error = "Account session expired. Sign in again." }, statusCode: 401);
+
+    var upsert = JsonSerializer.Serialize(new
+    {
+        user_id = user,
+        sku = payload.Sku,
+        seats = Math.Max(1, payload.Seats),
+        license_key = key,
+        stripe_sid = payload.Sid,
+        updated_at = DateTime.UtcNow
+    });
+    using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+    using var req = new HttpRequestMessage(HttpMethod.Post, supabaseUrl + "/rest/v1/licenses");
+    req.Headers.TryAddWithoutValidation("apikey", service);
+    req.Headers.TryAddWithoutValidation("Authorization", "Bearer " + service);
+    req.Headers.TryAddWithoutValidation("Prefer", "resolution=merge-duplicates,return=minimal");
+    req.Content = new StringContent(upsert, System.Text.Encoding.UTF8, "application/json");
+    using var res = await http.SendAsync(req);
+    if (!res.IsSuccessStatusCode)
+    {
+        var err = await res.Content.ReadAsStringAsync();
+        return Results.Json(new { error = "Could not save the license to the account.", detail = err }, statusCode: 502);
+    }
+    return Results.Ok(new { ok = true, sku = payload.Sku, seats = payload.Seats });
+});
+
 app.MapPost("/webhook", async (HttpRequest request, IConfiguration config) =>
 {
     var secret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET") ?? config["Stripe:WebhookSecret"];
@@ -131,6 +181,25 @@ static bool TryMeta(Dictionary<string, string>? metadata, out string sku, out in
     if (sku.Equals("family", StringComparison.OrdinalIgnoreCase))
         seats = Math.Max(seats, 3);
     return true;
+}
+
+static async Task<string?> SupabaseUserId(string supabaseUrl, string anon, string jwt)
+{
+    try
+    {
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        using var req = new HttpRequestMessage(HttpMethod.Get, supabaseUrl + "/auth/v1/user");
+        req.Headers.TryAddWithoutValidation("apikey", anon);
+        req.Headers.TryAddWithoutValidation("Authorization", "Bearer " + jwt);
+        using var res = await http.SendAsync(req);
+        if (!res.IsSuccessStatusCode) return null;
+        using var doc = JsonDocument.Parse(await res.Content.ReadAsStringAsync());
+        return doc.RootElement.TryGetProperty("id", out var id) ? id.GetString() : null;
+    }
+    catch
+    {
+        return null;
+    }
 }
 
 static void LoadDotEnvWalk(string start)

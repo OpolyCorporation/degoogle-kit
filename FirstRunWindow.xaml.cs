@@ -9,6 +9,7 @@ public partial class FirstRunWindow : Window
     {
         InitializeComponent();
         ThemeChrome.Apply(this);
+        NoticeBox.Text = LegalCopy.PrivacyNotice;
     }
 
     private void OnCancel(object sender, RoutedEventArgs e)
@@ -22,7 +23,7 @@ public partial class FirstRunWindow : Window
         if (AgeBox.IsChecked != true || LocalBox.IsChecked != true || PrivacyBox.IsChecked != true)
         {
             MessageBox.Show(
-                "Please tick all three boxes. GDPR requires consent to be specific, informed, and freely given — we cannot pre-tick them for you.",
+                "Please tick the age, local storage, and privacy notice boxes. GDPR requires consent to be specific, informed, and freely given — we cannot pre-tick them for you.",
                 "Consent needed",
                 MessageBoxButton.OK,
                 MessageBoxImage.Information);
@@ -37,6 +38,7 @@ public partial class FirstRunWindow : Window
             CloudAiConsent = false
         });
         PermissionService.Set(AccessKind.PcScan, ScanBox.IsChecked == true);
+        PermissionService.Set(AccessKind.AccountCloud, SupabaseBox.IsChecked == true);
         if (DesktopShortcutBox.IsChecked == true)
             ShortcutService.CreateDesktop();
         if (StartMenuShortcutBox.IsChecked == true)

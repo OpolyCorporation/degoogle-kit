@@ -29,6 +29,9 @@ public partial class MainWindow : Window
     private int _lastScore = -1;
     private bool _dropLit;
     private readonly DispatcherTimer _updateClock = new() { Interval = TimeSpan.FromMinutes(1) };
+    private readonly DispatcherTimer _keepAliveClock = new() { Interval = TimeSpan.FromHours(24) };
+    private readonly DispatcherTimer _cloudSyncTimer = new() { Interval = TimeSpan.FromSeconds(5) };
+    private bool _cloudApplying;
 
     private FileSystemWatcher? _licenseWatch;
     private int _licenseRedeemBusy;
@@ -49,6 +52,7 @@ public partial class MainWindow : Window
         ApplyModeRadios();
         GdprList.ItemsSource = GdprCatalog.Rights;
         DataMapText.Text = PrivacyStore.DataMap();
+        LegalNoticeBox.Text = LegalCopy.PrivacyNotice;
         CloudAiConsentBox.IsChecked = PrivacyStore.Consent.CloudAiConsent;
         FillAiProviders();
         SelectProvider(PrivacyStore.Settings.AiProvider);
@@ -71,6 +75,16 @@ public partial class MainWindow : Window
         _uiReady = true;
         BindPermissionToggles();
         WatchPendingLicense();
+        _keepAliveClock.Tick += async (_, _) =>
+        {
+            if (AccountService.IsSignedIn)
+                await AccountService.TouchKeepaliveAsync();
+        };
+        _cloudSyncTimer.Tick += async (_, _) =>
+        {
+            _cloudSyncTimer.Stop();
+            await PushCloudProgressAsync();
+        };
         _updateClock.Tick += async (_, _) =>
         {
             if (_applyingUpdate) return;
@@ -87,6 +101,20 @@ public partial class MainWindow : Window
         _lastPage = PageOverview;
         Motion.EnterPage(PageOverview);
         _updateClock.Start();
+        _keepAliveClock.Start();
+        RefreshAccountUi();
+        if (AccountService.IsSignedIn)
+        {
+            var alreadyChosen = PermissionService.Get(AccessKind.AccountCloud) is not null;
+            if (AskAccess.For(this, AccessKind.AccountCloud,
+                    "Allow DeGoogle Kit to use Supabase to restore your plan and checklist? You can refuse and stay local.",
+                    automatic: alreadyChosen))
+            {
+                _ = AccountService.TouchKeepaliveAsync();
+                await RestoreAccountProgressAsync(interactive: false);
+                await RestoreAccountLicenseAsync();
+            }
+        }
         await RedeemLaunchLicenseAsync();
         if (await TryApplyScheduledUpdateAsync()) return;
         await RunScanAsync(automatic: true);
@@ -321,6 +349,7 @@ public partial class MainWindow : Window
         if (e.PropertyName != nameof(GuideItem.IsDone)) return;
         ChecklistStore.Save(_guide);
         UpdateGuideStats();
+        QueueCloudSync();
     }
 
     private void OnOpenDefaultApps(object sender, RoutedEventArgs e) =>
@@ -718,7 +747,11 @@ public partial class MainWindow : Window
         UpdateGuideStats();
     }
 
-    private void SavePlan() => PlanStore.Persist(_planRows, _planState);
+    private void SavePlan()
+    {
+        PlanStore.Persist(_planRows, _planState);
+        QueueCloudSync();
+    }
 
     private void ApplyModeRadios()
     {
@@ -830,6 +863,7 @@ public partial class MainWindow : Window
     {
         _licenseWatch?.Dispose();
         _licenseWatch = null;
+        _keepAliveClock.Stop();
         base.OnClosed(e);
     }
 
@@ -892,6 +926,12 @@ public partial class MainWindow : Window
             LicenseBox.Text = result.Key;
             RefreshLicenseUi();
             NavPro.IsChecked = true;
+            if (AccountService.IsSignedIn)
+            {
+                var bind = await AccountService.BindLicenseAsync(result.Key);
+                if (interactive && !bind.Ok)
+                    MessageBox.Show(bind.Message + " Pro still works on this PC.", "Account");
+            }
             if (interactive || !string.IsNullOrWhiteSpace(raw))
             {
                 var extra = LicenseService.Record.Seats > 1
@@ -903,6 +943,101 @@ public partial class MainWindow : Window
         finally
         {
             Interlocked.Exchange(ref _licenseRedeemBusy, 0);
+        }
+    }
+
+    private async void OnAccountSignIn(object sender, RoutedEventArgs e)
+    {
+        if (!AskAccess.For(this, AccessKind.AccountCloud))
+            return;
+        var dialog = new AccountDialog { Owner = this };
+        if (dialog.ShowDialog() != true) return;
+        RefreshAccountUi();
+        _ = AccountService.TouchKeepaliveAsync();
+        await RestoreAccountProgressAsync(interactive: true);
+        await RestoreAccountLicenseAsync();
+        RefreshLicenseUi();
+    }
+
+    private async void OnAccountSignOut(object sender, RoutedEventArgs e)
+    {
+        _cloudSyncTimer.Stop();
+        await AccountService.SignOutAsync();
+        RefreshAccountUi();
+        MessageBox.Show(
+            "Signed out. This PC still has your local plan and checklist. The free account keeps the cloud backup. Pro stays if you already activated a key here.",
+            "Account");
+    }
+
+    private void RefreshAccountUi()
+    {
+        if (AccountStatus is null) return;
+        AccountStatus.Text = AccountService.StatusText;
+    }
+
+    private void QueueCloudSync()
+    {
+        if (!_uiReady || _cloudApplying || !AccountService.IsSignedIn || !PermissionService.AccountCloudGranted) return;
+        _cloudSyncTimer.Stop();
+        _cloudSyncTimer.Start();
+    }
+
+    private async Task PushCloudProgressAsync()
+    {
+        if (!AccountService.IsSignedIn || _cloudApplying) return;
+        await AccountService.PushProgressAsync(ProgressCloud.GuideIds(_guide), _planState);
+    }
+
+    private async Task RestoreAccountProgressAsync(bool interactive)
+    {
+        if (!AccountService.IsSignedIn) return;
+        var pull = await AccountService.PullProgressAsync();
+        if (!pull.Ok)
+        {
+            if (interactive)
+                MessageBox.Show(pull.Message, "Account");
+            return;
+        }
+
+        _cloudApplying = true;
+        try
+        {
+            if (pull.Data is { } remote)
+            {
+                ProgressCloud.ApplyGuide(_guide, remote.GuideDone);
+                _planState = ProgressCloud.MergePlan(_planState, remote.Plan);
+                PlanStore.Save(_planState);
+                ChecklistStore.Save(_guide);
+                RebuildPlan();
+                ApplyModeRadios();
+                UpdateGuideStats();
+            }
+        }
+        finally
+        {
+            _cloudApplying = false;
+        }
+
+        var push = await AccountService.PushProgressAsync(ProgressCloud.GuideIds(_guide), _planState);
+        PrivacyStore.Log("progress_restored", AccountService.Session?.Email ?? "");
+        if (!interactive) return;
+        var msg = pull.Data is null
+            ? "This free account had no backup yet. This PC's plan and checklist are now saved to it."
+            : "Your free account backup was merged with this PC (plan and checklist). API keys and Takeout files stay local.";
+        if (!push.Ok) msg += "\n\nCloud save: " + push.Message;
+        MessageBox.Show(msg, "Account");
+    }
+
+    private async Task RestoreAccountLicenseAsync()
+    {
+        if (!AccountService.IsSignedIn) return;
+        var pull = await AccountService.PullLicenseAsync();
+        if (!pull.Ok || string.IsNullOrWhiteSpace(pull.Key)) return;
+        if (LicenseService.Activate(pull.Key))
+        {
+            LicenseBox.Text = pull.Key;
+            RefreshLicenseUi();
+            PrivacyStore.Log("account_license_restored", AccountService.Session?.Email ?? "");
         }
     }
 
@@ -924,23 +1059,62 @@ public partial class MainWindow : Window
             "Shortcut");
     }
 
-    private void OnExportData(object sender, RoutedEventArgs e)
+    private async void OnExportData(object sender, RoutedEventArgs e)
     {
         if (!AskAccess.For(this, AccessKind.DesktopExport,
-                "Export DeGoogle Kit data as a zip on your Desktop?"))
+                "Export DeGoogle Kit data as a zip on your Desktop? Session tokens are left out. If you are signed in, the zip includes a copy of your cloud plan/checklist."))
             return;
+        await AccountService.WriteExportSnapshotAsync();
         var path = PrivacyStore.ExportArchive();
         MessageBox.Show("Exported to:\n" + path, "Export");
         TryOpenUri(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
     }
 
-    private void OnDeleteData(object sender, RoutedEventArgs e)
+    private async void OnDeleteData(object sender, RoutedEventArgs e)
     {
+        if (AccountService.IsSignedIn)
+        {
+            var cloud = MessageBox.Show(
+                "Also delete your cloud account (email, plan backup, linked Pro on the account)? This PC’s files are separate and will still be deleted next if you continue.",
+                "Cloud account",
+                MessageBoxButton.YesNoCancel,
+                MessageBoxImage.Warning);
+            if (cloud == MessageBoxResult.Cancel) return;
+            if (cloud == MessageBoxResult.Yes)
+            {
+                if (!AskAccess.For(this, AccessKind.DeleteAccount))
+                    return;
+                var del = await AccountService.DeleteAccountAsync();
+                if (!del.Ok)
+                {
+                    MessageBox.Show(del.Message, "Account");
+                    return;
+                }
+            }
+        }
         if (!AskAccess.For(this, AccessKind.EraseAppData))
             return;
         PrivacyStore.DeleteAllLocalData();
         Application.Current.Shutdown();
     }
+
+    private async void OnDeleteCloudAccount(object sender, RoutedEventArgs e)
+    {
+        if (!AccountService.IsSignedIn)
+        {
+            MessageBox.Show("Sign in first, or there is no cloud account on this PC.", "Account");
+            return;
+        }
+        if (!AskAccess.For(this, AccessKind.DeleteAccount))
+            return;
+        var del = await AccountService.DeleteAccountAsync();
+        RefreshAccountUi();
+        MessageBox.Show(del.Message, "Account");
+    }
+
+    private void OnOpenPrivacyNotice(object sender, RoutedEventArgs e) => TryOpenUri(LegalCopy.PrivacyUrl);
+
+    private void OnOpenTerms(object sender, RoutedEventArgs e) => TryOpenUri(LegalCopy.TermsUrl);
 
     private bool RequirePro()
     {
@@ -1017,6 +1191,7 @@ public partial class MainWindow : Window
         PermTakeout.IsChecked = PermissionService.Get(AccessKind.TakeoutRead) == true;
         PermExport.IsChecked = PermissionService.Get(AccessKind.DesktopExport) == true;
         PermSecrets.IsChecked = PermissionService.Get(AccessKind.StoreSecret) == true;
+        PermAccount.IsChecked = PermissionService.Get(AccessKind.AccountCloud) == true;
         _permUiReady = true;
     }
 
@@ -1030,6 +1205,13 @@ public partial class MainWindow : Window
         PermissionService.Set(AccessKind.TakeoutRead, PermTakeout.IsChecked == true);
         PermissionService.Set(AccessKind.DesktopExport, PermExport.IsChecked == true);
         PermissionService.Set(AccessKind.StoreSecret, PermSecrets.IsChecked == true);
+        PermissionService.Set(AccessKind.AccountCloud, PermAccount.IsChecked == true);
+        if (PermAccount.IsChecked != true && AccountService.IsSignedIn)
+        {
+            _cloudSyncTimer.Stop();
+            _ = AccountService.SignOutAsync();
+            RefreshAccountUi();
+        }
     }
 
     private bool TryOpenUri(string uri)

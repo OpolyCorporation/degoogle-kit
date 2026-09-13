@@ -477,16 +477,29 @@
                         <Border Style="{StaticResource CardBorder}">
                             <StackPanel>
                                 <TextBlock Text="Free forever" FontWeight="SemiBold"/>
-                                <TextBlock Text="The whole de-Google path: scan this PC, Your plan (Easy / Privacy / Own), Takeout parse and local converters, catalog, uninstall launcher, GDPR templates vs Google, local AI coach, permissions, export/erase your data. You do not pay to leave Google or to use your legal rights." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                <TextBlock Text="The whole de-Google path: scan this PC, Your plan (Easy / Privacy / Own), Takeout parse and local converters, catalog, uninstall launcher, GDPR templates vs Google, local AI coach, permissions, export/erase your data. You do not pay to leave Google or to use your legal rights. A free account is optional and backs up your plan and checklist." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Free account" FontWeight="SemiBold"/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8"
+                                           Text="Free: your plan and guide checklist sync across PCs after you allow Supabase (not Google). API keys, Takeout files, and scan results stay on this PC. If you later pay, Pro follows this same account."/>
+                                <TextBlock x:Name="AccountStatus" Foreground="{StaticResource Accent}" TextWrapping="Wrap" Margin="0,0,0,10"
+                                           Text="Signed out. Create a free account to back up your plan and checklist."/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Sign in / Create account" Style="{StaticResource PrimaryBtn}" Click="OnAccountSignIn" Margin="0,0,8,0"/>
+                                    <Button Content="Sign out" Style="{StaticResource GhostBtn}" Click="OnAccountSignOut"/>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                         <Border x:Name="ProLifetimeCard" Style="{StaticResource CardBorder}">
                             <StackPanel>
                                 <TextBlock Text="Lifetime Pro — €19 once (family €39, up to 3 PCs)" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
-                                    Pay with Stripe Checkout in your browser. After payment, this app fills the signed license key below and turns Pro on. You can also paste a key (DGK2…) or a Checkout session id (cs_…).
+                                    Pay with Stripe Checkout in your browser. After payment, this app fills the signed license key below and turns Pro on. Sign in first if you want that Pro license on other PCs too. You can also paste a key (DGK2…) or a Checkout session id (cs_…).
                                 </TextBlock>
-                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout opens Stripe in your browser. Cards never touch this app. Cloud Pass is not billed until hosted AI actually runs. EU VAT: add a Stripe Tax registration before turning automatic tax on."/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout opens Stripe in your browser. Cards never touch this app. By paying you agree to the terms (v2). EU/EEA: 14 days to withdraw if the key is not activated. Cloud Pass is not billed until hosted AI actually runs. EU VAT: add a Stripe Tax registration before turning automatic tax on."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <Button Content="Buy Lifetime €19" Style="{StaticResource PrimaryBtn}" Click="OnBuyLifetime" Margin="0,0,8,0"/>
                                     <Button Content="Buy Family €39" Style="{StaticResource GhostBtn}" Click="OnBuyFamily" Margin="0,0,8,0"/>
@@ -514,7 +527,7 @@
                 <ScrollViewer>
                     <StackPanel>
                         <TextBlock Text="Privacy &amp; this app" FontSize="26" FontWeight="SemiBold"/>
-                        <TextBlock Text="This is DeGoogle Kit’s own GDPR panel: what we store, how to export it, how to erase it." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,16"/>
+                        <TextBlock Text="This is DeGoogle Kit’s own GDPR panel: what we store, how to export it, how to erase it. Controller: Opolyonix Corp (CVR 43410369, Esbjerg Ø)." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,16"/>
                         <Border Style="{StaticResource CardBorder}">
                             <StackPanel>
                                 <TextBlock Text="Permissions on this PC" FontWeight="SemiBold"/>
@@ -525,7 +538,8 @@
                                 <CheckBox x:Name="PermUpdates" Content="Check the cloud update feed when I ask" Click="OnPermissionToggle" Margin="0,0,0,6"/>
                                 <CheckBox x:Name="PermTakeout" Content="Read Takeout zips/folders I choose" Click="OnPermissionToggle" Margin="0,0,0,6"/>
                                 <CheckBox x:Name="PermExport" Content="Write export/report files to the Desktop" Click="OnPermissionToggle" Margin="0,0,0,6"/>
-                                <CheckBox x:Name="PermSecrets" Content="Store API keys for this Windows user (DPAPI)" Click="OnPermissionToggle"/>
+                                <CheckBox x:Name="PermSecrets" Content="Store API keys for this Windows user (DPAPI)" Click="OnPermissionToggle" Margin="0,0,0,6"/>
+                                <CheckBox x:Name="PermAccount" Content="Allow Supabase (optional free account — not Google)" Click="OnPermissionToggle"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource CardBorder}">
@@ -551,10 +565,25 @@
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Legal" FontWeight="SemiBold"/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"
+                                           Text="Privacy notice v2 covers local files, the optional free account (Supabase), Stripe payments, and GitHub updates. Terms cover the 14-day EU withdrawal for an unused license key."/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Button Content="Open privacy notice" Style="{StaticResource GhostBtn}" Click="OnOpenPrivacyNotice" Margin="0,0,8,0"/>
+                                    <Button Content="Open terms" Style="{StaticResource GhostBtn}" Click="OnOpenTerms"/>
+                                </StackPanel>
+                                <TextBox x:Name="LegalNoticeBox" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
+                                         VerticalScrollBarVisibility="Auto" Height="180" BorderThickness="0"
+                                         Background="Transparent" Foreground="{StaticResource Text}" CaretBrush="{StaticResource Text}"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBorder}">
                             <TextBlock x:Name="DataMapText" TextWrapping="Wrap"/>
                         </Border>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
                             <Button Content="Export my data (zip)" Style="{StaticResource PrimaryBtn}" Click="OnExportData" Margin="0,0,8,0"/>
+                            <Button Content="Delete my cloud account" Style="{StaticResource GhostBtn}" Click="OnDeleteCloudAccount" Margin="0,0,8,0"/>
                             <Button Content="Delete all local data" Style="{StaticResource DangerBtn}" Click="OnDeleteData"/>
                         </StackPanel>
                         <TextBlock Text="Action log" FontWeight="SemiBold" Margin="0,0,0,8"/>

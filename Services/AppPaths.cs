@@ -19,6 +19,7 @@ public static class AppPaths
     public static string UpdateState => Path.Combine(Root, "update.json");
     public static string UpdateCache => Path.Combine(Root, "update");
     public static string Permissions => Path.Combine(Root, "permissions.json");
+    public static string Account => Path.Combine(Root, "account.bin");
 
     public static void EnsureRoot() => Directory.CreateDirectory(Root);
 }

@@ -61,6 +61,7 @@ mkdir "%DEST%" >nul 2>&1
 copy /Y "%~dp0DeGoogleKit.exe" "%DEST%\DeGoogleKit.exe" >nul
 if exist "%~dp0README.txt" copy /Y "%~dp0README.txt" "%DEST%\README.txt" >nul
 if exist "%~dp0updates" xcopy /E /I /Y "%~dp0updates" "%DEST%\updates\" >nul
+if exist "%~dp0cloud" xcopy /E /I /Y "%~dp0cloud" "%DEST%\cloud\" >nul
 if not exist "%DEST%\DeGoogleKit.exe" (
   echo Could not copy DeGoogleKit.exe
   pause
