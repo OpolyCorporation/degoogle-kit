@@ -1,7 +1,7 @@
 ﻿{
-    "changelog":  "First public Windows build: scan, plan, Takeout parse, Stripe test checkout.",
-    "sha256":  "081acbe6e8b5258c55c1e0e7af8b9e773765f8d76f6cbe63cb91567a82031ee1",
-    "downloadUrl":  "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.3.0/DeGoogleKit-win-x64.zip",
-    "version":  "0.3.0",
+    "changelog":  "After Stripe payment, a signed license key is minted and filled on the Pro tab.",
+    "sha256":  "6a875ba73d7a403abac7f533baef64df5205e76637820c3414455a4b74ea23d5",
+    "downloadUrl":  "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.3.1/DeGoogleKit-win-x64.zip",
+    "version":  "0.3.1",
     "releasedAt":  "2026-09-13"
 }
