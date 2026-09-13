@@ -327,44 +327,114 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <StackPanel Margin="0,0,0,12">
-                    <TextBlock Text="AI Coach" FontSize="26" FontWeight="SemiBold"/>
-                    <TextBlock Text="Real AI uses *your* key or a local OpenAI-compatible server. Claude, ChatGPT, Groq, OpenRouter, OpenCode, Mistral, DeepSeek, Grok, Together, Fireworks, Cerebras, Venice, Perplexity, plus Ollama / OpenClaw / LM Studio. Google Gemini is blocked. Offline answers work with no key. Hosted DeGoogle AI (we pay) is Cloud Pass and not live yet." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
-                    <WrapPanel>
-                        <Button Content="Write my plan" Style="{StaticResource PrimaryBtn}" Click="OnLocalPlan" Margin="0,0,8,8"/>
-                        <Button Content="Add or change API key" Style="{StaticResource GhostBtn}" Click="OnSetupAi" Margin="0,0,8,8"/>
-                        <ComboBox x:Name="AiProviderBox" Width="280" Margin="0,0,8,8" SelectionChanged="OnAiProviderChanged"/>
-                        <TextBox x:Name="AiModelBox" Width="200" Margin="0,0,8,8" ToolTip="Model id for this provider. Leave the default unless you know a better one."/>
-                        <TextBox x:Name="AiBaseUrlBox" Width="280" Margin="0,0,8,8" Visibility="Collapsed"
-                                 ToolTip="OpenAI-compatible base URL, e.g. http://127.0.0.1:11434/v1"/>
-                        <TextBox x:Name="ApiKeyBox" Width="200" Margin="0,0,8,8" ToolTip="API key is encrypted with Windows DPAPI for this user only."/>
-                        <Button Content="Save key" Style="{StaticResource GhostBtn}" Click="OnSaveApiKey" Margin="0,0,8,8"/>
-                        <Button Content="Get a key" Style="{StaticResource GhostBtn}" Click="OnOpenAiKeyClick" Margin="0,0,8,8"/>
-                    </WrapPanel>
-                    <TextBlock x:Name="AiProviderHint" Foreground="{StaticResource Accent}" TextWrapping="Wrap" FontSize="12" Margin="0,0,0,6" Cursor="Hand" MouseLeftButtonUp="OnOpenAiKeyPage"/>
-                    <CheckBox x:Name="CloudAiConsentBox" Content="I consent to sending my question and a local scan summary to the provider I chose (not Google). I can withdraw this anytime." Click="OnCloudConsent" Margin="0,4,0,0"/>
-                </StackPanel>
-                <ListBox x:Name="ChatList" Grid.Row="1" Margin="0,0,0,10" ItemContainerStyle="{StaticResource FadeRowItem}">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Style="{StaticResource CardBorder}" Margin="0,0,0,8">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding Role}" FontWeight="SemiBold" Foreground="{StaticResource Accent}"/>
-                                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Margin="0,6,0,0"/>
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-                <TextBlock x:Name="AiTyping" Grid.Row="1" VerticalAlignment="Bottom" Margin="8,0,8,14"
-                           Text="Thinking…" Foreground="{StaticResource Accent}" FontWeight="SemiBold"
-                           Visibility="Collapsed" IsHitTestVisible="False"/>
-                <DockPanel Grid.Row="2">
-                    <Button DockPanel.Dock="Right" Content="Offline answer" Style="{StaticResource GhostBtn}" Click="OnAskOffline" Margin="8,0,0,0"/>
-                    <Button DockPanel.Dock="Right" Content="Ask DeGoogle AI" Style="{StaticResource GhostBtn}" Click="OnAskHosted" Margin="8,0,0,0"/>
-                    <Button DockPanel.Dock="Right" Content="Ask AI" Style="{StaticResource PrimaryBtn}" Click="OnAskCloud" Margin="8,0,0,0"/>
-                    <TextBox x:Name="ChatInput" Height="36" VerticalContentAlignment="Center"/>
+
+                <DockPanel Margin="0,0,0,12">
+                    <Button DockPanel.Dock="Right" Content="Write my plan" Style="{StaticResource PrimaryBtn}" Click="OnLocalPlan" VerticalAlignment="Top"/>
+                    <StackPanel Margin="0,0,12,0">
+                        <TextBlock Text="AI Coach" FontSize="26" FontWeight="SemiBold"/>
+                        <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Text="Your key, your provider — never Gemini. Offline answers work with no key. Hosted DeGoogle AI is Cloud Pass and not live yet."/>
+                    </StackPanel>
                 </DockPanel>
+
+                <Grid Grid.Row="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,10" Padding="16">
+                        <StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="12"/>
+                                    <ColumnDefinition Width="0.72*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Provider" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                                <TextBlock Grid.Column="2" Text="Model" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,0,0,6"/>
+                                <ComboBox x:Name="AiProviderBox" Grid.Row="1" MinHeight="38" SelectionChanged="OnAiProviderChanged"/>
+                                <TextBox x:Name="AiModelBox" Grid.Row="1" Grid.Column="2" Height="38" VerticalContentAlignment="Center"
+                                         ToolTip="Model id for this provider. Leave the default unless you know a better one."/>
+                            </Grid>
+                            <TextBlock x:Name="EndpointLabel" Text="Local endpoint" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,12,0,6" Visibility="Collapsed"/>
+                            <TextBox x:Name="AiBaseUrlBox" Height="38" VerticalContentAlignment="Center" Margin="0,0,0,0" Visibility="Collapsed"
+                                     ToolTip="OpenAI-compatible base URL, e.g. http://127.0.0.1:11434/v1"/>
+                            <TextBlock Text="API key" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Muted}" Margin="0,12,0,6"/>
+                            <DockPanel LastChildFill="True">
+                                <Button DockPanel.Dock="Right" Content="Get a key" Style="{StaticResource GhostBtn}" Click="OnOpenAiKeyClick" Margin="8,0,0,0" Padding="14,8"/>
+                                <Button DockPanel.Dock="Right" Content="Save key" Style="{StaticResource GhostBtn}" Click="OnSaveApiKey" Margin="8,0,0,0" Padding="14,8"/>
+                                <Grid>
+                                    <PasswordBox x:Name="ApiKeyBox" Height="38" VerticalContentAlignment="Center" PasswordChanged="OnApiKeyChanged"
+                                                 ToolTip="Encrypted with Windows DPAPI for this user only. Never sent to us or to Google by Save."/>
+                                    <TextBlock x:Name="ApiKeyWatermark" Text="Paste key — stored only on this PC" Foreground="{StaticResource Muted}"
+                                               IsHitTestVisible="False" VerticalAlignment="Center" Margin="14,0,0,0"/>
+                                </Grid>
+                            </DockPanel>
+                            <TextBlock x:Name="AiProviderHint" Foreground="{StaticResource Accent}" TextWrapping="Wrap" FontSize="12.5" Margin="0,10,0,0" Cursor="Hand" MouseLeftButtonUp="OnOpenAiKeyPage"/>
+                            <CheckBox x:Name="CloudAiConsentBox" Click="OnCloudConsent" Margin="0,12,0,0">
+                                <TextBlock TextWrapping="Wrap" Text="I consent to sending my question and a local scan summary to this provider (not Google). I can withdraw this anytime."/>
+                            </CheckBox>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{StaticResource CardBorder}" Margin="0" Padding="8">
+                        <Grid>
+                            <ListBox x:Name="ChatList" Background="Transparent" BorderThickness="0" Padding="6"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ScrollViewer.CanContentScroll="False"
+                                     HorizontalContentAlignment="Stretch"
+                                     Focusable="False"
+                                     ItemContainerStyle="{StaticResource FadeRowItem}">
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border x:Name="bubble" CornerRadius="12" Padding="12,10" Margin="0,0,48,8"
+                                                Background="{StaticResource BgRaised}" BorderBrush="{StaticResource Line}" BorderThickness="1"
+                                                HorizontalAlignment="Left">
+                                            <StackPanel>
+                                                <TextBlock x:Name="role" Text="{Binding Role}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource Accent}"/>
+                                                <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding Role}" Value="You">
+                                                <Setter TargetName="bubble" Property="HorizontalAlignment" Value="Right"/>
+                                                <Setter TargetName="bubble" Property="Margin" Value="48,0,0,8"/>
+                                                <Setter TargetName="bubble" Property="Background" Value="{StaticResource NavSelected}"/>
+                                                <Setter TargetName="bubble" Property="BorderBrush" Value="{StaticResource Primary}"/>
+                                                <Setter TargetName="role" Property="Foreground" Value="{StaticResource PrimaryHover}"/>
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                            <TextBlock x:Name="AiTyping" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="16,0,16,12"
+                                       Text="Thinking…" Foreground="{StaticResource Accent}" FontWeight="SemiBold"
+                                       Visibility="Collapsed" IsHitTestVisible="False"/>
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="2" Style="{StaticResource CardBorder}" Margin="0,10,0,0" Padding="10">
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Bottom">
+                            <Button Content="Ask AI" Style="{StaticResource PrimaryBtn}" Click="OnAskCloud" Margin="8,0,0,0" Padding="16,9"/>
+                            <Button Content="Offline" Style="{StaticResource GhostBtn}" Click="OnAskOffline" Margin="8,0,0,0" Padding="14,8"/>
+                            <Button Content="Topics" Style="{StaticResource GhostBtn}" Click="OnOfflineTopics" Margin="8,0,0,0" Padding="14,8"/>
+                            <Button Content="DeGoogle AI" Style="{StaticResource GhostBtn}" Click="OnAskHosted" Margin="8,0,0,0" Padding="14,8"/>
+                        </StackPanel>
+                        <Grid MinHeight="40">
+                            <TextBox x:Name="ChatInput" MinHeight="40" VerticalContentAlignment="Center" TextWrapping="Wrap" AcceptsReturn="False"
+                                     ToolTip="Ask how to leave Gmail, Photos, Chrome…" TextChanged="OnChatInputChanged" KeyDown="OnChatInputKeyDown"/>
+                            <TextBlock x:Name="ChatWatermark" Text="Ask how to leave Gmail, Photos, Chrome…" Foreground="{StaticResource Muted}"
+                                       IsHitTestVisible="False" VerticalAlignment="Center" Margin="14,0,0,0"/>
+                        </Grid>
+                    </DockPanel>
+                </Border>
             </Grid>
 
             <Grid x:Name="PageGdpr" Visibility="Collapsed">

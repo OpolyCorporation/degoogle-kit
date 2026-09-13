@@ -70,7 +70,7 @@ public partial class MainWindow : Window
         _chat.Add(new ChatMessage
         {
             Role = "Coach",
-            Text = "Ask AI uses *your* key or a local compatible server (Claude, ChatGPT, Groq, OpenRouter, OpenCode, Ollama/OpenClaw, and more). We will ask before anything leaves this PC. Google Gemini is blocked. Offline answers work without a key."
+            Text = "Offline answers cover the full leave-Google path (mail, photos, Chrome, Takeout, phone, GDPR…). Ask a product name, or type “topics”. Your own AI key is optional. Gemini is blocked."
         });
         _uiReady = true;
         BindPermissionToggles();
@@ -465,6 +465,9 @@ public partial class MainWindow : Window
         AddChat("Coach", AiCoach.LocalAnswer(q, _scan, _guide));
     }
 
+    private void OnOfflineTopics(object sender, RoutedEventArgs e) =>
+        AddChat("Coach", OfflineGuide.Index());
+
     private void OnSetupAi(object sender, RoutedEventArgs e)
     {
         EnsureUserAi(forceSetup: true);
@@ -550,7 +553,7 @@ public partial class MainWindow : Window
     private void OnSaveApiKey(object sender, RoutedEventArgs e)
     {
         if (!PersistAiSettings()) return;
-        var key = ApiKeyBox.PasswordOrText().Trim();
+        var key = ApiKeyBox.Password.Trim();
         if (key.Length >= 8)
         {
             if (!AskAccess.For(this, AccessKind.StoreSecret,
@@ -558,6 +561,7 @@ public partial class MainWindow : Window
                 return;
             SecretStore.SaveApiKey(key);
             ApiKeyBox.Clear();
+            UpdateApiKeyWatermark();
         }
         MessageBox.Show("Provider settings saved on this Windows user. Keys use DPAPI and are never sent to us or to Google.",
             "Saved", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -574,6 +578,26 @@ public partial class MainWindow : Window
         ApplyAiProviderUi();
     }
 
+    private void OnApiKeyChanged(object sender, RoutedEventArgs e) => UpdateApiKeyWatermark();
+
+    private void UpdateApiKeyWatermark()
+    {
+        if (ApiKeyWatermark is null || ApiKeyBox is null) return;
+        ApiKeyWatermark.Visibility = ApiKeyBox.SecurePassword.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void OnChatInputChanged(object sender, TextChangedEventArgs e)
+    {
+        if (ChatWatermark is null || ChatInput is null) return;
+        ChatWatermark.Visibility = string.IsNullOrEmpty(ChatInput.Text) ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void OnChatInputKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key != System.Windows.Input.Key.Enter) return;
+        e.Handled = true;
+        OnAskCloud(sender, e);
+    }
     private void OnOpenAiKeyClick(object sender, RoutedEventArgs e) => OpenCurrentAiKeyPage();
     private void OnOpenAiKeyPage(object sender, System.Windows.Input.MouseButtonEventArgs e) => OpenCurrentAiKeyPage();
 
@@ -603,9 +627,11 @@ public partial class MainWindow : Window
         var def = CurrentAiProvider();
         if (AiProviderHint is not null)
             AiProviderHint.Text = def.Hint;
+        var showEndpoint = def.NeedsEndpoint ? Visibility.Visible : Visibility.Collapsed;
+        if (EndpointLabel is not null) EndpointLabel.Visibility = showEndpoint;
         if (AiBaseUrlBox is not null)
         {
-            AiBaseUrlBox.Visibility = def.NeedsEndpoint ? Visibility.Visible : Visibility.Collapsed;
+            AiBaseUrlBox.Visibility = showEndpoint;
             if (def.NeedsEndpoint && string.IsNullOrWhiteSpace(AiBaseUrlBox.Text))
                 AiBaseUrlBox.Text = "http://127.0.0.1:11434/v1";
         }
@@ -1390,9 +1416,4 @@ public partial class MainWindow : Window
             return false;
         }
     }
-}
-
-internal static class TextBoxExtensions
-{
-    public static string PasswordOrText(this TextBox box) => box.Text;
 }

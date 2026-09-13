@@ -55,62 +55,8 @@ public static class AiCoach
         return sb.ToString();
     }
 
-    public static string LocalAnswer(string question, ScanSnapshot scan, IReadOnlyList<GuideItem> guide)
-    {
-        var q = question.ToLowerInvariant();
-        if (string.IsNullOrWhiteSpace(q))
-            return "Ask anything like “replace Gmail” or “what should I do first?”";
-
-        if (q.Contains("first") || q.Contains("start") || q.Contains("plan"))
-            return LocalPlan(scan, guide);
-
-        var catalogHit = ServiceCatalog.V1.FirstOrDefault(s =>
-            q.Contains(s.Id, StringComparison.OrdinalIgnoreCase) ||
-            q.Contains(s.GoogleName.ToLowerInvariant()) ||
-            s.GoogleName.ToLowerInvariant().Split(' ').Any(w => w.Length > 4 && q.Contains(w)));
-        if (catalogHit is not null)
-        {
-            return $"{catalogHit.GoogleName}\n\n{catalogHit.How}\n\nEasy: {catalogHit.Easy.Name}\nPrivacy: {catalogHit.Privacy.Name}\nOwn: {catalogHit.Own.Name}\n\nNothing is deleted from Google until you verify counts on the other side.";
-        }
-
-        var hit = guide.FirstOrDefault(g =>
-            q.Contains(g.Id) ||
-            q.Contains(g.GoogleProduct.ToLowerInvariant()) ||
-            g.Title.ToLowerInvariant().Split(' ').Any(w => w.Length > 4 && q.Contains(w)));
-        if (hit is not null)
-        {
-            var alts = string.Join(", ", hit.Alternatives.Select(a => a.Name));
-            return $"{hit.Title}\n\n{hit.Why}\n\nTry: {alts}";
-        }
-
-        if (q.Contains("gdpr") || q.Contains("delete account") || q.Contains("slet"))
-            return "Under GDPR you can export (Art. 20, Takeout) and request erasure (Art. 17). Export first. Templates are in the Rights tab. Complaints in Denmark go to Datatilsynet.";
-
-        if (q.Contains("dns") || q.Contains("8.8.8.8"))
-            return scan.DnsLooksLikeGoogle
-                ? "Yes — this PC is using Google DNS. Quad9 (9.9.9.9) is a privacy-friendly swap. Lifetime Pro can apply it with one click and keep a backup to restore."
-                : "This PC does not appear to use 8.8.8.8. You can still switch to Quad9 if you want DNS that is not Google.";
-
-        if (q.Contains("chrome"))
-            return "Install another browser, import bookmarks, sign into a non-Google sync if you want it, set the new browser as default, then uninstall Chrome from This PC.";
-
-        if (q.Contains("youtube") || q.Contains("freetube"))
-            return "There is no honest 1:1 YouTube replacement. Options: Leave (NewPipe / PeerTube where the video exists), Reduce (FreeTube still uses YouTube’s catalog — we label that), or Archive your Takeout. Pick it on Your plan.";
-
-        if (q.Contains("photo") || q.Contains("billeder"))
-            return "Takeout Google Photos, then import into Ente (easy, encrypted) or Immich if you self-host. Compare photo counts before you disconnect Google Photos.";
-
-        if (q.Contains("gmail") || q.Contains("mail") || q.Contains("proton"))
-            return "Use Proton Easy Switch for Gmail — that is Proton’s OAuth, not a Google API inside this app. Export via Takeout first if you want a local copy.";
-
-        if (q.Contains("password") || q.Contains("adgangskode") || q.Contains("bitwarden"))
-            return "Chrome can export a CSV. Import into Proton Pass or Bitwarden, then delete the CSV. It is plaintext. This app will warn if Takeout contains that file.";
-
-        if (q.Contains("android") || q.Contains("pixel") || q.Contains("graphene"))
-            return "Pixels can move to GrapheneOS. Back up with Takeout first, copy 2FA to Ente Auth, then install GrapheneOS from a separate computer. Do not factory-reset until Auth works.";
-
-        return "I only answer from the local guide, the service catalog, and this PC’s scan — nothing is sent to the internet.\n\nFor a longer, free-form answer: add *your* API key (Claude, ChatGPT, Groq, OpenRouter, OpenCode, Mistral, and others — never Gemini). DeGoogle AI (Cloud Pass) is when we run the model and you pay a small subscription because that costs us.";
-    }
+    public static string LocalAnswer(string question, ScanSnapshot scan, IReadOnlyList<GuideItem> guide) =>
+        OfflineGuide.Answer(question, scan, guide);
 
     public static string DefaultModel(string provider) => AiProviders.Find(provider).DefaultModel;
 
@@ -148,10 +94,9 @@ public static class AiCoach
             return "Paste an OpenAI-compatible endpoint (Ollama, OpenClaw, LM Studio, LiteLLM…).";
 
         var plan = LocalPlan(scan, guide);
-        var catalog = string.Join("\n", ServiceCatalog.V1.Select(s =>
-            $"- {s.GoogleName}: {s.How} Easy={s.Easy.Name}; Privacy={s.Privacy.Name}; Own={s.Own.Name}"));
+        var catalog = OfflineGuide.Corpus();
         var payload =
-            $"User question:\n{question}\n\nLocal scan context (may include app names on this PC):\n{plan}\n\nReplacement catalog:\n{catalog}";
+            $"User question:\n{question}\n\nLocal scan context (may include app names on this PC):\n{plan}\n\nFact-checked offline guides (prefer these; do not invent a 1:1 YouTube replacement; never suggest Google as the destination):\n{catalog}";
 
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(90) };
         http.DefaultRequestHeaders.UserAgent.ParseAdd("DeGoogleKit/" + AppInfo.VersionText);
