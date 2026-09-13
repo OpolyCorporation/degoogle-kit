@@ -5,6 +5,21 @@ namespace DeGoogleKit.Services;
 
 public static class LicenseClient
 {
+    public static async Task<(bool Ok, string Message, string? Key)> RedeemAsync(string raw)
+    {
+        var token = ProtocolRegistration.ExtractToken(raw);
+        if (string.IsNullOrWhiteSpace(token))
+            token = (raw ?? "").Trim();
+
+        if (token.StartsWith("DGK2.", StringComparison.Ordinal))
+            return (true, "License key ready.", token);
+
+        if (token.StartsWith("cs_", StringComparison.OrdinalIgnoreCase))
+            return await ExchangeSessionAsync(token);
+
+        return (false, "Paste a Stripe session id (cs_…) or a DGK2 license key.", null);
+    }
+
     public static async Task<(bool Ok, string Message, string? Key)> ExchangeSessionAsync(string sessionId)
     {
         sessionId = sessionId.Trim();
@@ -27,7 +42,10 @@ public static class LicenseClient
 
             if (!doc.RootElement.TryGetProperty("key", out var keyEl))
                 return (false, "License server did not return a key.", null);
-            return (true, "License issued.", keyEl.GetString());
+            var key = keyEl.GetString();
+            if (string.IsNullOrWhiteSpace(key) || !key.StartsWith("DGK2.", StringComparison.Ordinal))
+                return (false, "License server returned a key this app cannot verify.", null);
+            return (true, "License issued.", key);
         }
         catch (HttpRequestException)
         {

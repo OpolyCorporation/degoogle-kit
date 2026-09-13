@@ -1,29 +1,46 @@
 using DeGoogleKit.Licensing;
 using Stripe;
 using Stripe.Checkout;
+using System.Text.Json;
 
 LoadDotEnvWalk(Directory.GetCurrentDirectory());
 LoadDotEnvWalk(AppContext.BaseDirectory);
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+    p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 var app = builder.Build();
+app.UseCors();
 
 app.MapGet("/health", () => Results.Ok(new { ok = true, service = "degoogle-kit-license" }));
 
-app.MapGet("/v1/license", async (string session_id, IConfiguration config) =>
+app.MapMethods("/v1/license", ["GET", "POST"], async (HttpRequest request, IConfiguration config) =>
 {
     var apiKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY") ?? config["Stripe:ApiKey"];
     var pem = Environment.GetEnvironmentVariable("LICENSE_SIGNING_KEY") ?? config["License:SigningKey"];
     if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(pem))
         return Results.Json(new { error = "License API is missing STRIPE_API_KEY or LICENSE_SIGNING_KEY." }, statusCode: 503);
-    if (string.IsNullOrWhiteSpace(session_id) || !session_id.StartsWith("cs_", StringComparison.Ordinal))
+
+    var sessionId = request.Query["session_id"].ToString();
+    if (string.IsNullOrWhiteSpace(sessionId) && request.HasFormContentType)
+        sessionId = request.Form["session_id"].ToString();
+    if (string.IsNullOrWhiteSpace(sessionId) && request.ContentLength > 0
+        && string.Equals(request.ContentType, "application/json", StringComparison.OrdinalIgnoreCase))
+    {
+        using var doc = await JsonDocument.ParseAsync(request.Body);
+        if (doc.RootElement.TryGetProperty("session_id", out var el))
+            sessionId = el.GetString() ?? "";
+    }
+
+    sessionId = sessionId.Trim();
+    if (sessionId.Length == 0 || !sessionId.StartsWith("cs_", StringComparison.Ordinal))
         return Results.BadRequest(new { error = "Pass a Stripe Checkout session id (cs_…)." });
 
     try
     {
         var stripe = new StripeClient(apiKey);
         var sessions = new SessionService(stripe);
-        var session = await sessions.GetAsync(session_id, new SessionGetOptions
+        var session = await sessions.GetAsync(sessionId, new SessionGetOptions
         {
             Expand = ["line_items.data.price.product"]
         });
@@ -31,8 +48,12 @@ app.MapGet("/v1/license", async (string session_id, IConfiguration config) =>
             return Results.Json(new { error = "That session is not paid yet.", status = session.PaymentStatus }, statusCode: 402);
 
         var (sku, seats) = ResolveSku(session, config);
-        if (string.IsNullOrWhiteSpace(sku))
-            return Results.Json(new { error = "Paid session has no DeGoogle Kit SKU." }, statusCode: 400);
+        if (string.IsNullOrWhiteSpace(sku) || sku.StartsWith("cloud", StringComparison.OrdinalIgnoreCase))
+            return Results.Json(new { error = "This payment is not a DeGoogle Kit Pro license." }, statusCode: 400);
+
+        var created = session.Created == default
+            ? DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            : new DateTimeOffset(DateTime.SpecifyKind(session.Created, DateTimeKind.Utc)).ToUnixTimeSeconds();
 
         var ticket = LicenseTicket.Sign(new LicensePayload
         {
@@ -40,7 +61,7 @@ app.MapGet("/v1/license", async (string session_id, IConfiguration config) =>
             Sku = sku,
             Seats = seats,
             Sid = session.Id,
-            Iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            Iat = created
         }, pem);
 
         return Results.Ok(new { key = ticket, sku, seats, email = session.CustomerDetails?.Email });
@@ -75,7 +96,7 @@ app.MapPost("/webhook", async (HttpRequest request, IConfiguration config) =>
 
 app.Run();
 
-static (string Sku, int Seats) ResolveSku(Session session, IConfiguration config)
+static (string? Sku, int Seats) ResolveSku(Session session, IConfiguration config)
 {
     if (TryMeta(session.Metadata, out var sku, out var seats))
         return (sku, seats);
@@ -95,7 +116,7 @@ static (string Sku, int Seats) ResolveSku(Session session, IConfiguration config
             return (sku, seats);
     }
 
-    return ("lifetime", 1);
+    return (null, 0);
 }
 
 static bool TryMeta(Dictionary<string, string>? metadata, out string sku, out int seats)

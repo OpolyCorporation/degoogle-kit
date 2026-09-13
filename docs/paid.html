@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeGoogle Kit — License</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #071422;
+      color: #e8eef7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    main { max-width: 38rem; padding: 2.5rem 1.5rem; text-align: center; }
+    h1 { font-size: 1.7rem; margin: 0 0 0.6rem; }
+    p { color: #9aa8bc; line-height: 1.55; margin: 0 0 1.1rem; }
+    .box {
+      word-break: break-all;
+      text-align: left;
+      background: #0c1e33;
+      border: 1px solid #1c3554;
+      border-radius: 0.65rem;
+      padding: 0.85rem 1rem;
+      margin: 0 0 1rem;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 0.85rem;
+      color: #e8eef7;
+    }
+    .btn {
+      display: inline-block;
+      background: #2F7BFF;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 0.85rem 1.35rem;
+      border-radius: 0.65rem;
+      border: 0;
+      cursor: pointer;
+      font-size: 1rem;
+      margin: 0 0.35rem 0.5rem;
+    }
+    .ghost { background: transparent; color: #3EE6A8; }
+    .ok { color: #3EE6A8; }
+    .err { color: #ff8a8a; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Payment received</h1>
+    <p id="status">Opening DeGoogle Kit to drop your signed license key into the Pro tab.</p>
+    <div class="box" id="token" hidden></div>
+    <p>
+      <a class="btn" id="openApp" href="#">Open DeGoogle Kit</a>
+      <button class="btn ghost" id="copyBtn" type="button" hidden>Copy key</button>
+    </p>
+    <p>If the app does not open, start DeGoogle Kit, open <strong>Pro</strong>, paste the value above, and click <strong>Activate license</strong>.</p>
+  </main>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const session = (params.get("session_id") || params.get("session") || "").trim();
+    const status = document.getElementById("status");
+    const tokenEl = document.getElementById("token");
+    const openBtn = document.getElementById("openApp");
+    const copyBtn = document.getElementById("copyBtn");
+    let token = session;
+    let protocol = session
+      ? "degooglekit://activate?session=" + encodeURIComponent(session)
+      : "degooglekit://activate";
+
+    function showToken(value, label) {
+      token = value;
+      tokenEl.hidden = false;
+      tokenEl.textContent = value;
+      copyBtn.hidden = false;
+      openBtn.href = value.startsWith("DGK2.")
+        ? "degooglekit://activate?key=" + encodeURIComponent(value)
+        : "degooglekit://activate?session=" + encodeURIComponent(value);
+    }
+
+    copyBtn.onclick = async () => {
+      try { await navigator.clipboard.writeText(token); copyBtn.textContent = "Copied"; }
+      catch { copyBtn.textContent = "Select the box and copy"; }
+    };
+
+    if (!session) {
+      status.textContent = "No Checkout session was passed. Open DeGoogle Kit → Pro and paste your key.";
+      openBtn.href = "degooglekit://activate";
+    } else {
+      showToken(session, "session");
+      status.innerHTML = "Checkout finished. Click <strong>Open DeGoogle Kit</strong> so the app can mint a signed key and put it on the Pro tab.";
+      openBtn.href = protocol;
+      location.href = protocol;
+    }
+  </script>
+</body>
+</html>

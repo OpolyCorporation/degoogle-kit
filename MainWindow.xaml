@@ -484,7 +484,7 @@
                             <StackPanel>
                                 <TextBlock Text="Lifetime Pro — €19 once (family €39, up to 3 PCs)" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
-                                    Pay with Stripe Checkout in your browser. We never see your card. Google Pay is not required. After payment, paste the Checkout session id (starts with cs_) below — or paste a signed DGK2 license key.
+                                    Pay with Stripe Checkout in your browser. After payment, this app fills the signed license key below and turns Pro on. You can also paste a key (DGK2…) or a Checkout session id (cs_…).
                                 </TextBlock>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout opens Stripe in your browser. Cards never touch this app. Cloud Pass is not billed until hosted AI actually runs. EU VAT: add a Stripe Tax registration before turning automatic tax on."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
@@ -493,8 +493,8 @@
                                     <Button Content="Start 14-day trial" Style="{StaticResource GhostBtn}" Click="OnStartTrial"/>
                                 </StackPanel>
                                 <DockPanel>
-                                    <Button DockPanel.Dock="Right" Content="Activate after payment" Style="{StaticResource PrimaryBtn}" Click="OnActivateKey" Margin="8,0,0,0"/>
-                                    <TextBox x:Name="LicenseBox" ToolTip="Paste cs_… from Stripe or a DGK2 license key."/>
+                                    <Button DockPanel.Dock="Right" Content="Activate license" Style="{StaticResource PrimaryBtn}" Click="OnActivateKey" Margin="8,0,0,0"/>
+                                    <TextBox x:Name="LicenseBox" ToolTip="Paid key (DGK2…) is stored here. You can also paste a Stripe session id (cs_…)."/>
                                 </DockPanel>
                             </StackPanel>
                         </Border>

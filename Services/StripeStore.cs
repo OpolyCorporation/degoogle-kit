@@ -12,9 +12,10 @@ public static class StripeStore
     public const string FamilyPaymentLink = "https://buy.stripe.com/test_14AfZh7VagwtfPr4cz2wU01";
 
     public static string AfterCheckoutHint =>
-        CatalogIsLive
-            ? "Stripe Checkout opened in your browser.\n\nAfter payment, paste the session id (cs_…) into the box and click Activate after payment."
-            : "Stripe Checkout opened in your browser (test mode — no live charges yet).\n\nAfter payment, paste the session id (cs_…) into the box and click Activate after payment. The license server must be running.";
+        "Stripe Checkout opened in your browser.\n\nAfter you pay, the site opens DeGoogle Kit and fills the license key on the Pro tab. If the browser asks, allow it. Keep this window open.";
+
+    public const string PaidReturnUrl =
+        "https://opolycorporation.github.io/degoogle-kit/paid.html?session_id={CHECKOUT_SESSION_ID}";
 
     public static string LicenseApiUrl
     {

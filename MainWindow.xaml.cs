@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
@@ -28,6 +29,9 @@ public partial class MainWindow : Window
     private int _lastScore = -1;
     private bool _dropLit;
     private readonly DispatcherTimer _updateClock = new() { Interval = TimeSpan.FromMinutes(1) };
+
+    private FileSystemWatcher? _licenseWatch;
+    private int _licenseRedeemBusy;
 
     public MainWindow()
     {
@@ -66,6 +70,7 @@ public partial class MainWindow : Window
         });
         _uiReady = true;
         BindPermissionToggles();
+        WatchPendingLicense();
         _updateClock.Tick += async (_, _) =>
         {
             if (_applyingUpdate) return;
@@ -82,6 +87,7 @@ public partial class MainWindow : Window
         _lastPage = PageOverview;
         Motion.EnterPage(PageOverview);
         _updateClock.Start();
+        await RedeemLaunchLicenseAsync();
         if (await TryApplyScheduledUpdateAsync()) return;
         await RunScanAsync(automatic: true);
         if (UpdateService.ShouldRemindOnLaunch() && UpdateService.State.LastManifest is { } cached)
@@ -820,6 +826,13 @@ public partial class MainWindow : Window
         MessageBox.Show(StripeStore.AfterCheckoutHint, "Stripe");
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        _licenseWatch?.Dispose();
+        _licenseWatch = null;
+        base.OnClosed(e);
+    }
+
     private async void OnActivateKey(object sender, RoutedEventArgs e)
     {
         var raw = LicenseBox.Text.Trim();
@@ -828,28 +841,69 @@ public partial class MainWindow : Window
             MessageBox.Show("Paste a Stripe session id (cs_…) or a DGK2 license key.", "License");
             return;
         }
-        if (!AskAccess.For(this, AccessKind.ChangeLicense, "Activate a paid or trial license on this PC?"))
+        if (!AskAccess.For(this, AccessKind.ChangeLicense, "Activate a paid license on this PC?"))
             return;
+        await RedeemAndInsertAsync(raw, interactive: true);
+    }
 
-        if (raw.StartsWith("cs_", StringComparison.OrdinalIgnoreCase))
+    private void WatchPendingLicense()
+    {
+        AppPaths.EnsureRoot();
+        _licenseWatch = new FileSystemWatcher(AppPaths.Root, ProtocolRegistration.PendingFileName)
         {
-            var result = await LicenseClient.ExchangeSessionAsync(raw);
+            NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.CreationTime,
+            EnableRaisingEvents = true
+        };
+        _licenseWatch.Changed += (_, _) => Dispatcher.InvokeAsync(RedeemLaunchLicenseAsync);
+        _licenseWatch.Created += (_, _) => Dispatcher.InvokeAsync(RedeemLaunchLicenseAsync);
+    }
+
+    private async Task RedeemLaunchLicenseAsync()
+    {
+        var pending = ProtocolRegistration.TakePending();
+        var launch = App.LaunchPayload;
+        if (!string.IsNullOrWhiteSpace(launch))
+            App.LaunchPayload = null;
+        var raw = !string.IsNullOrWhiteSpace(pending) ? pending : launch;
+        if (string.IsNullOrWhiteSpace(raw)) return;
+        NavPro.IsChecked = true;
+        await RedeemAndInsertAsync(raw, interactive: false);
+    }
+
+    private async Task RedeemAndInsertAsync(string raw, bool interactive)
+    {
+        if (Interlocked.Exchange(ref _licenseRedeemBusy, 1) == 1) return;
+        try
+        {
+            var result = await LicenseClient.RedeemAsync(raw);
             if (!result.Ok || string.IsNullOrWhiteSpace(result.Key))
             {
-                MessageBox.Show(result.Message, "License");
+                if (interactive || ProtocolRegistration.LooksLikePayload(raw))
+                    MessageBox.Show(result.Message, "License");
                 return;
             }
-            raw = result.Key;
-            LicenseBox.Text = raw;
-        }
 
-        if (!LicenseService.Activate(raw))
-        {
-            MessageBox.Show("That key is invalid. Paid licenses are signed DGK2 keys from Stripe. Debug builder keys only work in Debug builds.", "License");
-            return;
+            if (!LicenseService.Activate(result.Key))
+            {
+                MessageBox.Show("The server issued a key this copy of DeGoogle Kit could not verify.", "License");
+                return;
+            }
+
+            LicenseBox.Text = result.Key;
+            RefreshLicenseUi();
+            NavPro.IsChecked = true;
+            if (interactive || !string.IsNullOrWhiteSpace(raw))
+            {
+                var extra = LicenseService.Record.Seats > 1
+                    ? " Family covers up to " + LicenseService.Record.Seats + " PCs — copy the key below onto the others."
+                    : "";
+                MessageBox.Show("Pro is on. The signed license key is in the box on the Pro tab." + extra, "License");
+            }
         }
-        RefreshLicenseUi();
-        MessageBox.Show("License saved on this PC.", "License");
+        finally
+        {
+            Interlocked.Exchange(ref _licenseRedeemBusy, 0);
+        }
     }
 
     private void OnExportData(object sender, RoutedEventArgs e)
@@ -883,6 +937,13 @@ public partial class MainWindow : Window
     {
         LicenseBadge.Text = LicenseService.StatusText;
         ProStatus.Text = "Current plan: " + LicenseService.StatusText;
+        var stored = LicenseService.Record.Key;
+        if (!string.IsNullOrWhiteSpace(stored)
+            && stored.StartsWith("DGK2.", StringComparison.Ordinal)
+            && (string.IsNullOrWhiteSpace(LicenseBox.Text)
+                || LicenseBox.Text.Trim().StartsWith("cs_", StringComparison.OrdinalIgnoreCase)
+                || LicenseBox.Text.Trim().StartsWith("DGK2.", StringComparison.Ordinal)))
+            LicenseBox.Text = stored;
         if (!_uiReady || LicenseBadge is null) return;
         Motion.Pop(LicenseBadge);
         if (LicenseService.IsPro)
