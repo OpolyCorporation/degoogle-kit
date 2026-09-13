@@ -9,10 +9,12 @@
     <AssemblyName>DeGoogleKit</AssemblyName>
     <Product>DeGoogle Kit</Product>
     <AssemblyTitle>DeGoogle Kit</AssemblyTitle>
-    <Version>0.3.1</Version>
-    <InformationalVersion>0.3.1</InformationalVersion>
+    <Version>0.3.2</Version>
+    <InformationalVersion>0.3.2</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
+    <DebugSymbols Condition="'$(Configuration)' == 'Release'">false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

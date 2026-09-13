@@ -541,6 +541,16 @@
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Shortcuts" FontWeight="SemiBold"/>
+                                <TextBlock Text="Optional. Points at this copy of DeGoogleKit.exe. Scan, plan, Takeout, and GDPR work without Pro." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Add Desktop shortcut" Style="{StaticResource GhostBtn}" Click="OnAddDesktopShortcut" Margin="0,0,8,0"/>
+                                    <Button Content="Add Start menu shortcut" Style="{StaticResource GhostBtn}" Click="OnAddStartMenuShortcut"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource CardBorder}">
                             <TextBlock x:Name="DataMapText" TextWrapping="Wrap"/>
                         </Border>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,16">

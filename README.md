@@ -4,9 +4,15 @@ Windows app to leave Google on your terms: scan this PC, pick replacements, pars
 
 ## Download for Windows
 
-**[DeGoogleKit-win-x64.zip](https://github.com/OpolyCorporation/degoogle-kit/releases/latest/download/DeGoogleKit-win-x64.zip)** — unzip and run `DeGoogleKit.exe`. You do not need to install .NET.
+**[DeGoogleKit-win-x64.zip](https://github.com/OpolyCorporation/degoogle-kit/releases/latest/download/DeGoogleKit-win-x64.zip)** — one compressed app, not a runtime gigabyte dump.
 
-That same link is what a website should use. It always points at the latest GitHub Release:
+1. Unzip.
+2. Double-click **Setup.cmd** (copies `DeGoogleKit.exe` into your user folder and starts it), or run `DeGoogleKit.exe` from the unzipped folder.
+3. On first launch, choose whether to add **Desktop** and **Start menu** shortcuts.
+
+Scan, plan, Takeout, and GDPR work without paying. Pro is optional.
+
+That zip URL is what a website should use:
 
 ```
 https://github.com/OpolyCorporation/degoogle-kit/releases/latest/download/DeGoogleKit-win-x64.zip

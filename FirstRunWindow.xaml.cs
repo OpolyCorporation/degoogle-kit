@@ -37,6 +37,10 @@ public partial class FirstRunWindow : Window
             CloudAiConsent = false
         });
         PermissionService.Set(AccessKind.PcScan, ScanBox.IsChecked == true);
+        if (DesktopShortcutBox.IsChecked == true)
+            ShortcutService.CreateDesktop();
+        if (StartMenuShortcutBox.IsChecked == true)
+            ShortcutService.CreateStartMenu();
         DialogResult = true;
         Close();
     }

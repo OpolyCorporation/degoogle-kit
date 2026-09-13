@@ -906,6 +906,24 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnAddDesktopShortcut(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show(
+            ShortcutService.CreateDesktop()
+                ? "Desktop shortcut added. It opens this DeGoogleKit.exe."
+                : "Could not create the Desktop shortcut.",
+            "Shortcut");
+    }
+
+    private void OnAddStartMenuShortcut(object sender, RoutedEventArgs e)
+    {
+        MessageBox.Show(
+            ShortcutService.CreateStartMenu()
+                ? "Start menu shortcut added. It opens this DeGoogleKit.exe."
+                : "Could not create the Start menu shortcut.",
+            "Shortcut");
+    }
+
     private void OnExportData(object sender, RoutedEventArgs e)
     {
         if (!AskAccess.For(this, AccessKind.DesktopExport,
