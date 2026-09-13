@@ -1,7 +1,7 @@
 ﻿{
-    "changelog":  "Easier Windows download: one compressed exe (~58 MB zip), Setup.cmd, optional Desktop and Start menu shortcuts on first launch. Scan, plan, Takeout, and GDPR work without Pro.",
-    "sha256":  "f410f376169aaa773cc28c7e6baee02e6fda8744205c17dedd660f9b659c71cc",
-    "downloadUrl":  "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.3.2/DeGoogleKit-win-x64.zip",
-    "version":  "0.3.2",
+    "changelog":  "DeGoogle Kit 0.4.0: dark-mode sign-in fields, a 7-day Pro trial on a free account, Lifetime Pro at €29.99 (Family €59.99), and a real PC/Takeout scan that fills your plan. Privacy notice v3. Scan, plan, Takeout, and GDPR stay free.",
+    "sha256":  "8de00c94b3abadefc02bd884930b15bdecb97f5d68cf62ab5b2b354c1ee7c45a",
+    "downloadUrl":  "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.4.0/DeGoogleKit-win-x64.zip",
+    "version":  "0.4.0",
     "releasedAt":  "2026-09-13"
 }
