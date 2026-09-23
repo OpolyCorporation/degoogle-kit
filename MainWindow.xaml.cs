@@ -1130,9 +1130,10 @@ public partial class MainWindow : Window
         if (!ConfirmPaidCheckout(
                 "Lifetime Pro",
                 "Lifetime Pro is one PC (" + LicenseService.LifetimePrice + " once). For up to " +
-                LicenseService.FamilySeats + " PCs in the same home, use Household instead."))
+                LicenseService.FamilySeats + " PCs in the same home, use Household instead.\n\n" +
+                "Checkout opens on the website so you can tick the 14-day withdrawal box before paying."))
             return;
-        if (!TryOpenUri(StripeStore.LifetimePaymentLink)) return;
+        if (!TryOpenUri(StripeStore.LifetimeCheckoutUrl)) return;
         MessageBox.Show(StripeStore.AfterCheckoutHint, "Checkout");
     }
 
@@ -1144,9 +1145,10 @@ public partial class MainWindow : Window
                 " Windows PCs (" + LicenseService.FamilyPrice + " once).\n\n" +
                 "Why it exists: one purchase for a household that is leaving Google on several machines — not a shared Netflix-style plan. " +
                 "You get one key; paste it on each PC. If you only need one PC, buy Lifetime (" +
-                LicenseService.LifetimePrice + ") instead."))
+                LicenseService.LifetimePrice + ") instead.\n\n" +
+                "Checkout opens on the website so you can tick the 14-day withdrawal box before paying."))
             return;
-        if (!TryOpenUri(StripeStore.FamilyPaymentLink)) return;
+        if (!TryOpenUri(StripeStore.FamilyCheckoutUrl)) return;
         MessageBox.Show(
             StripeStore.AfterCheckoutHint +
             "\n\nHousehold next step: after this PC activates, use “Copy key for other PCs” and paste the same key on up to " +
@@ -1415,11 +1417,37 @@ public partial class MainWindow : Window
     private async void OnExportData(object sender, RoutedEventArgs e)
     {
         if (!AskAccess.For(this, AccessKind.DesktopExport,
-                "Export DeGoogle Kit data as a zip on your Desktop? Session tokens are left out. If you are signed in, the zip includes a copy of your cloud plan/checklist."))
+                "Export DeGoogle Kit data to your Desktop?\n\n" +
+                "• Local files from this PC (zip)\n" +
+                "• If signed in: the same cloud account JSON as the website “Download my data” button\n\n" +
+                "Session tokens are left out of the zip."))
             return;
-        await AccountService.WriteExportSnapshotAsync();
+
+        string? cloudNote = null;
+        if (AccountService.IsSignedIn)
+        {
+            var cloud = await AccountService.ExportMyDataAsync();
+            if (cloud.Ok && !string.IsNullOrWhiteSpace(cloud.Json))
+            {
+                await AccountService.WriteExportSnapshotAsync();
+                var jsonPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+                    $"degoogle-kit-my-data-{DateTime.Now:yyyyMMdd}.json");
+                File.WriteAllText(jsonPath, cloud.Json);
+                cloudNote = "Cloud account JSON (same as the website):\n" + jsonPath;
+            }
+            else
+            {
+                await AccountService.WriteExportSnapshotAsync();
+                cloudNote = "Cloud export note: " + cloud.Message;
+            }
+        }
+
         var path = PrivacyStore.ExportArchive();
-        MessageBox.Show("Exported to:\n" + path, "Export");
+        var msg = "Local zip:\n" + path;
+        if (!string.IsNullOrWhiteSpace(cloudNote))
+            msg += "\n\n" + cloudNote;
+        MessageBox.Show(msg, "Export");
         TryOpenUri(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
     }
 
@@ -1428,7 +1456,9 @@ public partial class MainWindow : Window
         if (AccountService.IsSignedIn)
         {
             var cloud = MessageBox.Show(
-                "Also delete your cloud account (email, plan backup, linked Pro on the account)? This PC’s files are separate and will still be deleted next if you continue.",
+                "Also delete your cloud account on the shared database (same as the website)?\n\n" +
+                "That removes email, plan backup, linked Pro, household invites, and support messages.\n" +
+                "This PC’s files are separate and will still be deleted next if you continue.",
                 "Cloud account",
                 MessageBoxButton.YesNoCancel,
                 MessageBoxImage.Warning);
@@ -1455,9 +1485,20 @@ public partial class MainWindow : Window
     {
         if (!AccountService.IsSignedIn)
         {
-            MessageBox.Show("Sign in first, or there is no cloud account on this PC.", "Account");
+            MessageBox.Show(
+                "Sign in first, or delete from the website account page (same database).",
+                "Account");
             return;
         }
+        var confirm = MessageBox.Show(
+            "Delete your cloud account for good?\n\n" +
+            "This uses the same delete as the website: email, plan, license link, household invites, and messages.\n" +
+            "Local files on this PC stay until you erase them.\n\n" +
+            "This cannot be undone.",
+            "Delete cloud account",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+        if (confirm != MessageBoxResult.Yes) return;
         if (!AskAccess.For(this, AccessKind.DeleteAccount))
             return;
         var del = await AccountService.DeleteAccountAsync();

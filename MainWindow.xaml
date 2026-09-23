@@ -691,8 +691,10 @@
                             <TextBlock x:Name="DataMapText" TextWrapping="Wrap"/>
                         </Border>
                         <StackPanel Orientation="Horizontal" Margin="0,8,0,16">
-                            <Button Content="Export my data (zip)" Style="{StaticResource PrimaryBtn}" Click="OnExportData" Margin="0,0,8,0"/>
-                            <Button Content="Delete my cloud account" Style="{StaticResource GhostBtn}" Click="OnDeleteCloudAccount" Margin="0,0,8,0"/>
+                            <Button Content="Export my data" Style="{StaticResource PrimaryBtn}" Click="OnExportData" Margin="0,0,8,0"
+                                    ToolTip="Local zip + cloud JSON (same as website Download my data when signed in)"/>
+                            <Button Content="Delete my cloud account" Style="{StaticResource GhostBtn}" Click="OnDeleteCloudAccount" Margin="0,0,8,0"
+                                    ToolTip="Same delete as the website account page"/>
                             <Button Content="Delete all local data" Style="{StaticResource DangerBtn}" Click="OnDeleteData"/>
                         </StackPanel>
                         <TextBlock Text="Action log" FontWeight="SemiBold" Margin="0,0,0,8"/>

@@ -131,3 +131,45 @@ comment on table public.household_invites is
 -- Website also uses this same project for site_events / support_messages / user_roles
 -- (visit + download counters, contact form, admin). Applied via Supabase migration
 -- site_admin_tables_on_degoogle. Do not create a second Supabase for the marketing site.
+
+-- GDPR Art. 15/20 + 17 — same RPCs as the website MyDataPanel (must stay in sync).
+create or replace function public.export_my_data()
+returns jsonb language plpgsql stable security definer set search_path = public, auth as $$
+declare uid uuid := auth.uid(); em text;
+begin
+  if uid is null then raise exception 'Not signed in'; end if;
+  select email into em from auth.users where id = uid;
+  return jsonb_build_object(
+    'exported_at', now(),
+    'controller', 'Opolyonix Corp, CVR 43410369, Denmark',
+    'account', (select jsonb_build_object('id', id, 'email', email, 'created_at', created_at,
+                 'last_sign_in_at', last_sign_in_at, 'email_confirmed_at', email_confirmed_at)
+                from auth.users where id = uid),
+    'progress', (select to_jsonb(p) from public.progress p where p.user_id = uid),
+    'licenses', coalesce((select jsonb_agg(to_jsonb(l)) from public.licenses l where l.user_id = uid), '[]'),
+    'household_invites_sent', coalesce((select jsonb_agg(jsonb_build_object('invitee_email', invitee_email,
+        'status', status, 'created_at', created_at, 'accepted_at', accepted_at, 'claimed_at', claimed_at,
+        'revoked_at', revoked_at)) from public.household_invites where owner_user_id = uid), '[]'),
+    'household_memberships', coalesce((select jsonb_agg(jsonb_build_object('status', status,
+        'created_at', created_at, 'accepted_at', accepted_at, 'claimed_at', claimed_at))
+        from public.household_invites where accepted_user_id = uid or lower(invitee_email) = lower(em)), '[]'),
+    'support_messages', coalesce((select jsonb_agg(jsonb_build_object('name', name, 'message', message,
+        'created_at', created_at)) from public.support_messages where lower(email) = lower(em)), '[]'),
+    'roles', coalesce((select jsonb_agg(role) from public.user_roles where user_id = uid), '[]')
+  );
+end $$;
+revoke all on function public.export_my_data() from public, anon;
+grant execute on function public.export_my_data() to authenticated;
+
+create or replace function public.delete_my_account()
+returns void language plpgsql security definer set search_path = public, auth as $$
+declare uid uuid := auth.uid(); em text;
+begin
+  if uid is null then raise exception 'Not signed in'; end if;
+  select email into em from auth.users where id = uid;
+  delete from public.support_messages where lower(email) = lower(em);
+  delete from public.household_invites where lower(invitee_email) = lower(em) and owner_user_id <> uid;
+  delete from auth.users where id = uid;
+end $$;
+revoke all on function public.delete_my_account() from public, anon;
+grant execute on function public.delete_my_account() to authenticated;

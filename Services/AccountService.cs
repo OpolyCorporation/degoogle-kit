@@ -300,18 +300,22 @@ public static class AccountService
         if (token is null) return (false, "Sign in first.");
         try
         {
+            // Same RPC as the website account page (Art. 17) — clears support messages,
+            // household invite rows, then auth.users (cascades progress/licenses).
             using var http = CreateClient();
-            using var req = new HttpRequestMessage(HttpMethod.Delete, Url + "/auth/v1/user");
+            using var req = new HttpRequestMessage(HttpMethod.Post, Url + "/rest/v1/rpc/delete_my_account");
             ApplyUser(req, token);
+            req.Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
             using var res = await http.SendAsync(req);
             if (res.IsSuccessStatusCode)
             {
                 AccountStore.Clear();
-                PrivacyStore.Log("account_deleted", "");
-                return (true, "Cloud account deleted (email, plan backup, linked license on the account). This PC still has local files until you erase them.");
+                PrivacyStore.Log("account_deleted", "rpc");
+                return (true,
+                    "Cloud account deleted on the shared database (same as the website): email, plan backup, linked license, household invites, and support messages. This PC still has local files until you erase them.");
             }
             var body = await res.Content.ReadAsStringAsync();
-            return (false, ProgressError(body, "Could not delete the cloud account. Try signing in again, or open a Privacy (GDPR) GitHub issue."));
+            return (false, ProgressError(body, "Could not delete the cloud account. Try signing in again, or use Delete my account on the website."));
         }
         catch (Exception ex)
         {
@@ -319,9 +323,69 @@ public static class AccountService
         }
     }
 
+    /// <summary>
+    /// GDPR Art. 15/20 — same export_my_data RPC as the website Download my data button.
+    /// </summary>
+    public static async Task<(bool Ok, string Message, string? Json)> ExportMyDataAsync()
+    {
+        if (!PermissionService.AccountCloudGranted)
+            return (false, "Permission to use Supabase was not granted.", null);
+        var token = await ValidAccessTokenAsync();
+        if (token is null) return (false, "Sign in first to export cloud account data.", null);
+        try
+        {
+            using var http = CreateClient();
+            using var req = new HttpRequestMessage(HttpMethod.Post, Url + "/rest/v1/rpc/export_my_data");
+            ApplyUser(req, token);
+            req.Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+            using var res = await http.SendAsync(req);
+            var body = await res.Content.ReadAsStringAsync();
+            if (!res.IsSuccessStatusCode)
+                return (false, ProgressError(body, "Could not export cloud account data."), null);
+            if (string.IsNullOrWhiteSpace(body) || body.Trim() == "null")
+                return (false, "Export returned empty data.", null);
+            // Pretty-print when possible.
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                body = JsonSerializer.Serialize(doc.RootElement, new JsonSerializerOptions { WriteIndented = true });
+            }
+            catch
+            {
+                // Keep raw body.
+            }
+            PrivacyStore.Log("account_export_rpc", Session?.Email ?? "");
+            return (true, "Cloud account export ready (same data as the website).", body);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message, null);
+        }
+    }
+
     public static async Task WriteExportSnapshotAsync()
     {
         if (!IsSignedIn) return;
+        AppPaths.EnsureRoot();
+        var export = await ExportMyDataAsync();
+        if (export.Ok && !string.IsNullOrWhiteSpace(export.Json))
+        {
+            File.WriteAllText(Path.Combine(AppPaths.Root, "account-cloud-export.json"), export.Json);
+            // Keep a small companion for older zip readers.
+            File.WriteAllText(
+                Path.Combine(AppPaths.Root, "account-cloud.json"),
+                JsonSerializer.Serialize(new
+                {
+                    source = "export_my_data",
+                    email = Session?.Email,
+                    user_id = Session?.UserId,
+                    exported_at = DateTime.UtcNow,
+                    note = "Full account JSON is in account-cloud-export.json (same as website Download my data)."
+                }, JsonFile.Options));
+            return;
+        }
+
+        // Fallback if the RPC is missing on an older project: progress-only snapshot.
         var pull = await PullProgressAsync();
         var payload = new
         {
@@ -331,9 +395,9 @@ public static class AccountService
             guide_done = pull.Data?.GuideDone,
             plan = pull.Data?.Plan,
             trial_started_at = pull.Data?.TrialStartedAt,
-            updated_at = pull.Data?.UpdatedAt
+            updated_at = pull.Data?.UpdatedAt,
+            warning = export.Message
         };
-        AppPaths.EnsureRoot();
         File.WriteAllText(
             Path.Combine(AppPaths.Root, "account-cloud.json"),
             JsonSerializer.Serialize(payload, JsonFile.Options));

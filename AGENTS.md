@@ -52,7 +52,8 @@ One email/password account works in **both** the Windows app and the website:
 ## Trader / legal
 
 - **Opolyonix Corp**, CVR **43410369**, Esbjerg Ø, Denmark
-- Privacy/terms notice version is `LegalCopy.NoticeVersion` (currently **v6**) — bump both in-app `LegalCopy` and `docs/privacy.html` / `docs/terms.html` together
+- Privacy/terms notice version is `LegalCopy.NoticeVersion` (currently **v7**) — bump both in-app `LegalCopy` and `docs/privacy.html` / `docs/terms.html` together
+- Website `/privacy` and `/terms` must say the same: shared account DB, same export/delete as the app, checkout 14-day checkbox
 - EU 14-day withdrawal for unused digital keys; Pro trial is separate (7 days, no card)
 
 ## Pricing (honest status)
@@ -118,6 +119,10 @@ updates/whats-new.txt       Short bullets shown in the update dialog — edit be
 - Before tagging: rewrite `updates/whats-new.txt` with short “What’s new” bullets (CI copies them into `latest.json` changelog)
 - App `Version` in `DeGoogleKit.csproj` must bump when cutting a new zip
 - Builds are **not code-signed** yet unless `WINDOWS_CERT_PFX` + `WINDOWS_CERT_PASSWORD` secrets are set — SmartScreen/Norton reputation warnings are expected until then
+- To sign: buy an **OV** Authenticode cert for Opolyonix Corp (CVR 43410369), export PFX, base64-encode into GitHub secret `WINDOWS_CERT_PFX`, password in `WINDOWS_CERT_PASSWORD`, retag a release. EV is optional later if Norton stays noisy.
+- Public download stays `releases/latest/download/DeGoogleKit-win-x64.zip` (website `DOWNLOAD_URL` + in-app feed)
+- Website checkout: `/checkout` with 14-day checkbox → `/api/checkout` → license-api `POST /v1/checkout` when `LICENSE_API_URL` is set, else Stripe Payment Link fallback
+- App Export/Delete call Supabase `export_my_data` / `delete_my_account` (same as website MyDataPanel)
 - Releases ship as a **self-contained folder** (not `PublishSingleFile`) so fewer AVs treat the binary like a temp dropper
 - Kill `DeGoogleKit.exe` before `dotnet publish` if the file is locked
 

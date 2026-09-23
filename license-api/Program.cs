@@ -133,6 +133,78 @@ app.MapPost("/v1/account/bind", async (HttpRequest request, IConfiguration confi
     return Results.Ok(new { ok = true, sku = payload.Sku, seats = payload.Seats });
 });
 
+app.MapPost("/v1/checkout", async (HttpRequest request, IConfiguration config) =>
+{
+    var apiKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY") ?? config["Stripe:ApiKey"];
+    if (string.IsNullOrWhiteSpace(apiKey))
+        return Results.Json(new { error = "License API is missing STRIPE_API_KEY." }, statusCode: 503);
+
+    string json;
+    using (var reader = new StreamReader(request.Body))
+        json = await reader.ReadToEndAsync();
+    using var body = JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json);
+    var skuRaw = body.RootElement.TryGetProperty("sku", out var skuEl) ? skuEl.GetString() ?? "" : "";
+    var successUrl = body.RootElement.TryGetProperty("success_url", out var su) ? su.GetString() ?? "" : "";
+    var cancelUrl = body.RootElement.TryGetProperty("cancel_url", out var cu) ? cu.GetString() ?? "" : "";
+    var withdrawal = body.RootElement.TryGetProperty("withdrawal_acknowledged", out var wa)
+        && wa.ValueKind is JsonValueKind.True;
+
+    if (!withdrawal)
+        return Results.BadRequest(new { error = "Acknowledge the 14-day withdrawal / immediate delivery first." });
+
+    var sku = skuRaw.Trim().ToLowerInvariant() switch
+    {
+        "lifetime" or "pro" => "lifetime",
+        "family" or "household" => "family",
+        _ => ""
+    };
+    if (sku.Length == 0)
+        return Results.BadRequest(new { error = "sku must be lifetime or household." });
+
+    var priceId = sku == "family"
+        ? (Environment.GetEnvironmentVariable("STRIPE_PRICE_FAMILY") ?? config["Stripe:PriceFamily"])
+        : (Environment.GetEnvironmentVariable("STRIPE_PRICE_LIFETIME") ?? config["Stripe:PriceLifetime"]);
+    if (string.IsNullOrWhiteSpace(priceId))
+        return Results.Json(new { error = "Stripe price id is not configured for that plan." }, statusCode: 503);
+
+    if (string.IsNullOrWhiteSpace(successUrl) || !successUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "success_url must be https." });
+    if (string.IsNullOrWhiteSpace(cancelUrl) || !cancelUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        return Results.BadRequest(new { error = "cancel_url must be https." });
+
+    if (!successUrl.Contains("{CHECKOUT_SESSION_ID}", StringComparison.Ordinal))
+        successUrl = successUrl.Contains('?', StringComparison.Ordinal)
+            ? successUrl + "&session_id={CHECKOUT_SESSION_ID}"
+            : successUrl + "?session_id={CHECKOUT_SESSION_ID}";
+
+    try
+    {
+        var stripe = new StripeClient(apiKey);
+        var sessions = new SessionService(stripe);
+        var session = await sessions.CreateAsync(new SessionCreateOptions
+        {
+            Mode = "payment",
+            SuccessUrl = successUrl,
+            CancelUrl = cancelUrl,
+            LineItems =
+            [
+                new SessionLineItemOptions { Price = priceId, Quantity = 1 }
+            ],
+            Metadata = new Dictionary<string, string>
+            {
+                ["sku"] = sku,
+                ["seats"] = sku == "family" ? "3" : "1",
+                ["withdrawal_acknowledged"] = "true"
+            }
+        });
+        return Results.Ok(new { url = session.Url, session_id = session.Id, sku, test_mode = apiKey.Contains("_test_", StringComparison.Ordinal) });
+    }
+    catch (StripeException ex)
+    {
+        return Results.Json(new { error = ex.Message }, statusCode: 400);
+    }
+});
+
 app.MapPost("/webhook", async (HttpRequest request, IConfiguration config) =>
 {
     var secret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET") ?? config["Stripe:WebhookSecret"];

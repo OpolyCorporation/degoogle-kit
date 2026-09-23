@@ -117,7 +117,8 @@ public static class PrivacyStore
         sb.AppendLine("plan.json — your migration plan (mode, destinations, service status).");
         sb.AppendLine("license.json — trial/Pro status. No payment card data.");
         sb.AppendLine("account.bin — optional Supabase session (DPAPI). Not included in the Desktop export zip.");
-        sb.AppendLine("account-cloud.json — copy of plan/checklist pulled from your account when you export while signed in.");
+        sb.AppendLine("account-cloud-export.json — full cloud account JSON from export_my_data (same as website Download my data).");
+        sb.AppendLine("account-cloud.json — short companion note when you export while signed in.");
         sb.AppendLine("audit.json — local action log (uninstall started, DNS changed, exports).");
         sb.AppendLine("settings.json — AI provider choice, DPAPI-protected API key, optional Supabase project URL.");
         sb.AppendLine("permissions.json — what you allowed (scan, links, clipboard, updates, Takeout, desktop files, secrets, account).");

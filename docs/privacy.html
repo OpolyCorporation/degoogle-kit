@@ -11,7 +11,7 @@
   <main>
     <p><a class="quiet" href="./">← DeGoogle Kit</a></p>
     <h1>Privacy notice</h1>
-    <p>Version 6. Controller: Opolyonix Corp, CVR 43410369, c/o Jack Jim Holst Jensen, Sportsvej 2, 2. th, 6705 Esbjerg Ø, Denmark.</p>
+    <p>Version 7. Controller: Opolyonix Corp, CVR 43410369, c/o Jack Jim Holst Jensen, Sportsvej 2, 2. th, 6705 Esbjerg Ø, Denmark.</p>
     <p>Electronic contact for privacy and consumer requests: open a GitHub issue at
       <a href="https://github.com/OpolyCorporation/degoogle-kit/issues">github.com/OpolyCorporation/degoogle-kit/issues</a>
       with the subject “Privacy (GDPR)” or “Withdrawal (consumer)”. Do not send Takeout archives or passwords.</p>
@@ -19,7 +19,7 @@
     <h2>Who processes what</h2>
     <ul>
       <li><strong>Local use (default).</strong> DeGoogle Kit runs on your Windows PC. Plan, checklist, scan results, Takeout files you choose, API keys, and trial/Pro status stay in AppData\DeGoogleKit. Opolyonix Corp does not receive that copy unless you later choose an optional cloud feature.</li>
-      <li><strong>Optional free account.</strong> If you create an email/password account, Opolyonix Corp is the controller of that account. Processor: Supabase (Auth + Postgres), not Google. We store your email, a hashed password (Supabase Auth), your plan, your guide checklist, and whether this account started the Pro trial (a timestamp only) so the trial can follow you to another PC. We do not upload API keys, Takeout files, scan results, or clipboard contents.</li>
+      <li><strong>Shared free account (website + Windows app).</strong> One Supabase project (degoogle). The same email/password works in both places. We store your email, a hashed password, your plan, your guide checklist, trial start time, linked license, household invites, and support messages. Export and delete use the same database functions on the website account page and in the app (Privacy).</li>
       <li><strong>Household invites.</strong> If you buy Household, you may invite other emails from the website. We store invite email, status, hashed login codes, and PC-claim hashes. Unclaimed invitees do not receive the license key or the owner’s plan backup.</li>
       <li><strong>Payments.</strong> Stripe processes Checkout for Lifetime Pro / Household (Family). We do not store card numbers. After payment a signed license key can be linked to your account.</li>
       <li><strong>Updates and this website.</strong> GitHub (Microsoft) hosts the Windows download, version feed, and these pages. Checking for updates is optional and sends the app version in the User-Agent.</li>
@@ -38,15 +38,15 @@
     <p>Children: this app is not directed at children under 16. Use needs 16+ or a parent/guardian (GDPR Art. 8 default age).</p>
 
     <h2>Retention</h2>
-    <p>Local data until you erase it or uninstall. Account data until you delete the account (database rows cascade). Stripe keeps payment records under its own retention. GitHub may log download IPs under its terms.</p>
+    <p>Local data until you erase it or uninstall. Account data until you delete the account (database rows cascade; support messages and invites cleaned up). Stripe keeps payment records under its own retention. GitHub may log download IPs under its terms.</p>
 
     <h2>Transfers</h2>
     <p>Local mode does not send your plan off this PC. An account uses Supabase over HTTPS. We use an EU region when the project allows it. If a processor stores data outside the EEA, Standard Contractual Clauses or an adequacy decision apply under that processor’s DPA. Stripe, GitHub, and Groq (hosted DeGoogle AI only) may process in the US with appropriate safeguards.</p>
 
     <h2>Your rights (Arts. 15–21)</h2>
-    <p>Access, rectification, erasure, restriction, portability, and objection. In the app: Privacy → Export my data, Delete all local data, and Delete my cloud account. Withdraw account consent by deleting the account, and Cloud AI consent on the Coach tab.</p>
+    <p>Access, rectification, erasure, restriction, portability, and objection. Export and delete work the same on the website account page and in the Windows app (Privacy → Export my data / Delete my cloud account). Local files need a separate erase on that PC.</p>
     <p>Complaints: <a href="https://www.datatilsynet.dk/">Datatilsynet (Denmark)</a> or your local EEA authority. You may also contact us first via GitHub issues.</p>
-    <p class="foot">Also see <a href="terms.html">terms</a>. This notice is the same as privacy notice v4 inside the Windows app.</p>
+    <p class="foot">Also see <a href="terms.html">terms</a>. This notice matches privacy notice v7 inside the Windows app.</p>
   </main>
 </body>
 </html>

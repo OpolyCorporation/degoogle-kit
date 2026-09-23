@@ -3,8 +3,8 @@ namespace DeGoogleKit.Services;
 public static class StripeStore
 {
     /// <summary>
-    /// False while Checkout URLs are Stripe test Payment Links. Flip after the live
-    /// catalog is created on the live Stripe account (not the sandbox).
+    /// False while Checkout URLs are Stripe test Payment Links / test Sessions.
+    /// Flip after the live catalog is created on the live Stripe account.
     /// </summary>
     public static bool CatalogIsLive => false;
 
@@ -26,11 +26,17 @@ public static class StripeStore
         }
     }
 
+    /// <summary>Fallback Payment Links when the website checkout API is unavailable.</summary>
     public const string LifetimePaymentLink = "https://buy.stripe.com/test_fZu8wP7Vacgd6eRfVh2wU00";
     public const string FamilyPaymentLink = "https://buy.stripe.com/test_14AfZh7VagwtfPr4cz2wU01";
 
+    public static string LifetimeCheckoutUrl => LegalCopy.WebsiteCheckoutUrl + "?plan=lifetime";
+    public static string FamilyCheckoutUrl => LegalCopy.WebsiteCheckoutUrl + "?plan=household";
+
     public static string AfterCheckoutHint =>
-        "Stripe Checkout opened in your browser.\n\nAfter you pay, the site opens DeGoogle Kit and fills the license key on the Pro tab. If the browser asks, allow it. Keep this window open.";
+        "Checkout opened in your browser.\n\n" +
+        "Tick the 14-day withdrawal box, pay with Stripe, then return here or allow the app to open with your key.\n" +
+        "Keep this window open.";
 
     public const string PaidReturnUrl =
         "https://opolycorporation.github.io/degoogle-kit/paid.html?session_id={CHECKOUT_SESSION_ID}";
