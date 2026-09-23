@@ -16,6 +16,12 @@ public static class LegalCopy
     public const string IssuesUrl = "https://github.com/OpolyCorporation/degoogle-kit/issues";
     public const string DatatilsynetUrl = "https://www.datatilsynet.dk/";
 
+    /// <summary>
+    /// Marketing / account site (Lovable). Update when a custom domain is published.
+    /// </summary>
+    public const string WebsiteUrl = "https://id-preview--d11fe691-44fe-4cc4-84a5-135f3b0e7341.lovable.app";
+    public const string WebsiteAccountUrl = WebsiteUrl + "/account";
+
     public static string IdentityLine =>
         ControllerName + ", CVR " + Cvr + ", " + Address;
 

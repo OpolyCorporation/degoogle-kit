@@ -61,6 +61,7 @@ public partial class MainWindow : Window
         AiBaseUrlBox.Text = PrivacyStore.Settings.AiBaseUrl;
         ApplyAiProviderUi();
         UpdateCoachConnectUi();
+        ApplyHostedAiUi();
         RefreshLicenseUi();
         RefreshAudit();
         UpdateGuideStats();
@@ -72,7 +73,7 @@ public partial class MainWindow : Window
         _chat.Add(new ChatMessage
         {
             Role = "Coach",
-            Text = "I’m the DeGoogle coach. Ask about Gmail, Photos, Chrome, Takeout, 2FA, the phone, GDPR — I’ll walk you through it like a chatbot. Related privacy questions are fine. I’m not a general everyday AI, so don’t use me as ChatGPT.\n\nOnce: Get a Groq key, paste it, tick consent, Send. Offline and Topics work with no key."
+            Text = "I’m the DeGoogle coach. Ask about Gmail, Photos, Chrome, Takeout, 2FA, phone, or GDPR — I’ll walk you through it.\n\nStart with Offline or Topics (no key). Optional: Get a free Groq key once, paste it, tick consent, then Send. I’m not a general ChatGPT replacement."
         });
         _uiReady = true;
         BindPermissionToggles();
@@ -194,6 +195,8 @@ public partial class MainWindow : Window
     private void OnOpenGuide(object sender, RoutedEventArgs e) => NavGuide.IsChecked = true;
     private void OnOpenTakeout(object sender, RoutedEventArgs e) => NavTakeout.IsChecked = true;
     private void OnOpenPlan(object sender, RoutedEventArgs e) => NavPlan.IsChecked = true;
+    private void OnOpenPc(object sender, RoutedEventArgs e) => NavPc.IsChecked = true;
+    private void OnOpenCoach(object sender, RoutedEventArgs e) => NavCoach.IsChecked = true;
     private void OnOpenGoogleTakeout(object sender, RoutedEventArgs e) =>
         TryOpenUri("https://takeout.google.com/");
     private void OnTakeoutHintClick(object sender, System.Windows.Input.MouseButtonEventArgs e) => OnPickTakeoutZip(sender, e);
@@ -345,7 +348,7 @@ public partial class MainWindow : Window
             : $"{snap.Apps.Count} Google-related install(s). Uninstall only after you have a replacement.";
 
         UpdateGuideStats();
-        SidebarHint.Text = "Takeout is parsed on this PC. Google is never auto-deleted.";
+        SidebarHint.Text = "1 Scan · 2 Plan · 3 Takeout · 4 Verify — never auto-delete.";
         PrivacyStore.Log("scan", $"{realApps} apps");
         await Motion.StaggerPop(CardApps, CardBrowser, CardScore, CardCenter);
     }
@@ -357,12 +360,19 @@ public partial class MainWindow : Window
         StatBrowser.Text = "—";
         StatBrowserNote.Text = "Not scanned.";
         PcSubtitle.Text = "This PC has not been scanned.";
-        SidebarHint.Text = "Nothing is scanned or changed until you allow it.";
+        SidebarHint.Text = "Allow a scan when ready. Nothing leaves this PC until you choose.";
         if (FolderText is not null) FolderText.Text = "";
         if (TaskText is not null) TaskText.Text = "";
         if (ExtraScanText is not null) ExtraScanText.Text = "";
         if (CenterHint is not null)
-            CenterHint.Text = "Scan this PC (or drop a Takeout zip) to see what is actually here. Nothing is sent to our servers.";
+            CenterHint.Text = "Scan this PC, then drop a Takeout zip. Everything stays local until you decide otherwise.";
+    }
+
+    private void ApplyHostedAiUi()
+    {
+        var show = StripeStore.HostedAiIsLive && StripeStore.LicenseApiLooksPublic;
+        if (HostedAiBtn is not null)
+            HostedAiBtn.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void UpdateGuideStats()
@@ -504,7 +514,7 @@ public partial class MainWindow : Window
         if (!EnsureUserAi())
         {
             AddChat("Coach", AiCoach.LocalAnswer(question, _scan, _guide) +
-                             "\n\n(Offline for now. Expand Connect Groq, Get a key, paste it, tick consent, then Send.)");
+                             "\n\n(Offline for now. Expand Connect, Get a key, paste it, tick consent, then Send — or stay on Offline/Topics.)");
             return;
         }
 
@@ -549,9 +559,14 @@ public partial class MainWindow : Window
     {
         var q = ChatInput.Text.Trim();
         if (q.Length == 0) q = "what should I do first?";
+        if (!StripeStore.HostedAiIsLive || !StripeStore.LicenseApiLooksPublic)
+        {
+            AddChat("Coach", UserFacing.HostedAiUnavailable());
+            return;
+        }
         if (!PrivacyStore.Consent.CloudAiConsent)
         {
-            AddChat("Coach", "Tick the consent box on this tab first. DeGoogle AI sends your question to our license server, then Groq — never Google.");
+            AddChat("Coach", UserFacing.HostedAiNeedsConsent());
             return;
         }
         if (!LicenseService.IsCloudPass)
@@ -566,7 +581,7 @@ public partial class MainWindow : Window
 
         AddChat("You", q);
         ChatInput.Clear();
-        AddChat("Coach", "Contacting DeGoogle AI (" + AiCoach.HostedModelLabel + ")…");
+        AddChat("Coach", "Contacting DeGoogle AI…");
         SetAiBusy(true, "Contacting DeGoogle AI…");
         string answer;
         try
@@ -1112,14 +1127,28 @@ public partial class MainWindow : Window
 
     private void OnBuyLifetime(object sender, RoutedEventArgs e)
     {
+        if (!StripeStore.CatalogIsLive)
+        {
+            MessageBox.Show(
+                "Checkout is not live yet (test mode). You can still use Free features and the 7-day trial with a free account. We’ll turn paid Checkout on when the live catalog is ready.",
+                "Pro", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
         if (!TryOpenUri(StripeStore.LifetimePaymentLink)) return;
-        MessageBox.Show(StripeStore.AfterCheckoutHint, "Stripe");
+        MessageBox.Show(StripeStore.AfterCheckoutHint, "Checkout");
     }
 
     private void OnBuyFamily(object sender, RoutedEventArgs e)
     {
+        if (!StripeStore.CatalogIsLive)
+        {
+            MessageBox.Show(
+                "Checkout is not live yet (test mode). Free features and the trial still work. Paid Family unlocks when live Checkout is on.",
+                "Pro", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
         if (!TryOpenUri(StripeStore.FamilyPaymentLink)) return;
-        MessageBox.Show(StripeStore.AfterCheckoutHint, "Stripe");
+        MessageBox.Show(StripeStore.AfterCheckoutHint, "Checkout");
     }
 
     protected override void OnClosed(EventArgs e)
@@ -1135,7 +1164,7 @@ public partial class MainWindow : Window
         var raw = LicenseBox.Text.Trim();
         if (raw.Length == 0)
         {
-            MessageBox.Show("Paste a Stripe session id (cs_…) or a DGK2 license key.", "License");
+            MessageBox.Show("Paste a license key or Checkout session id.", "License");
             return;
         }
         if (!AskAccess.For(this, AccessKind.ChangeLicense, "Activate a paid license on this PC?"))
@@ -1393,6 +1422,8 @@ public partial class MainWindow : Window
     private void OnOpenPrivacyNotice(object sender, RoutedEventArgs e) => TryOpenUri(LegalCopy.PrivacyUrl);
 
     private void OnOpenTerms(object sender, RoutedEventArgs e) => TryOpenUri(LegalCopy.TermsUrl);
+
+    private void OnOpenWebsiteAccount(object sender, RoutedEventArgs e) => TryOpenUri(LegalCopy.WebsiteAccountUrl);
 
     private bool RequirePro()
     {

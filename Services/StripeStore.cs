@@ -6,7 +6,25 @@ public static class StripeStore
     /// False while Checkout URLs are Stripe test Payment Links. Flip after the live
     /// catalog is created on the live Stripe account (not the sandbox).
     /// </summary>
-    public const bool CatalogIsLive = false;
+    public static bool CatalogIsLive => false;
+
+    /// <summary>
+    /// Hosted DeGoogle AI (we pay Groq via license-api). Keep false until a public
+    /// HTTPS license API is online with GROQ_API_KEY. Do not advertise or expose
+    /// server setup strings to end users while this is false.
+    /// </summary>
+    public static bool HostedAiIsLive => false;
+
+    public static bool LicenseApiLooksPublic
+    {
+        get
+        {
+            var url = LicenseApiUrl;
+            if (string.IsNullOrWhiteSpace(url)) return false;
+            if (!url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return false;
+            return !AiProviders.IsLoopback(url);
+        }
+    }
 
     public const string LifetimePaymentLink = "https://buy.stripe.com/test_fZu8wP7Vacgd6eRfVh2wU00";
     public const string FamilyPaymentLink = "https://buy.stripe.com/test_14AfZh7VagwtfPr4cz2wU01";

@@ -438,7 +438,7 @@ public static class OfflineGuide
         T("never", "What this app will not do",
             ["never", "auto delete", "safe", "wreck", "risk"],
             """
-            DeGoogle Kit does not: log into Google for you, scrape Gmail with your password, silently uninstall Chrome, wipe Drive/Chrome folders, or erase the Google account. You click each destructive step. Scan, plan, Takeout parse, catalog, GDPR templates, and this offline coach are free. Pro is extras (DNS apply, HTML report). DeGoogle AI (Cloud Pass) is hosted Groq GPT-OSS 120B that we pay for — it is not billed until the live Stripe catalog is on.
+            DeGoogle Kit does not: log into Google for you, scrape Gmail with your password, silently uninstall Chrome, wipe Drive/Chrome folders, or erase the Google account. You click each destructive step. Scan, plan, Takeout parse, catalog, GDPR templates, and this offline coach are free. Pro is extras (DNS apply, HTML report). Hosted DeGoogle AI (Cloud Pass) is coming later — until then use Offline or your own key.
             """),
 
         T("verify", "Verify before you disconnect",

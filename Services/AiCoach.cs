@@ -163,16 +163,9 @@ public static class AiCoach
         return messages;
     }
 
-    public const string HostedModelLabel = "Groq GPT-OSS 120B";
+    public const string HostedModelLabel = "hosted coach";
 
-    public static string HostedAnswerUnavailable()
-    {
-        if (!LicenseService.IsCloudPass)
-            return "DeGoogle AI is Cloud Pass (" + LicenseService.CloudMonthly + " or " + LicenseService.CloudYearly +
-                   "). We pay " + HostedModelLabel + " (about $0.15 / $0.60 per million tokens), so this is the only subscription.\n\n" +
-                   "We are not charging Cloud Pass until the live Stripe catalog is on. Use Ask AI with your own key, or Offline.";
-        return "Cloud Pass is on, but hosted DeGoogle AI could not start. Use Ask AI with your key, or Offline.";
-    }
+    public static string HostedAnswerUnavailable() => UserFacing.HostedAiUnavailable();
 
     public static async Task<string> HostedAnswer(
         string question,
@@ -181,15 +174,18 @@ public static class AiCoach
         IReadOnlyList<ChatMessage> history,
         CancellationToken ct)
     {
+        if (!StripeStore.HostedAiIsLive || !StripeStore.LicenseApiLooksPublic)
+            return UserFacing.HostedAiUnavailable();
+
         if (!PrivacyStore.Consent.CloudAiConsent)
-            return "Cloud AI is off. Tick the consent box on the Coach tab first. Hosted DeGoogle AI sends your question to our license server, then Groq — never Google.";
+            return UserFacing.HostedAiNeedsConsent();
 
         if (!LicenseService.IsCloudPass)
-            return HostedAnswerUnavailable();
+            return UserFacing.HostedAiUnavailable();
 
         var key = LicenseService.HostedLicenseKey;
         if (string.IsNullOrWhiteSpace(key) || !PassKeys.TryValidateCloud(key, out _))
-            return "Cloud Pass is marked on this PC, but there is no Cloud Pass key to prove it to the license server. Activate a Cloud Pass key on the Pro tab.";
+            return "Activate a Cloud Pass key on the Pro tab first, then try DeGoogle AI again.";
 
         var q = (question ?? "").Trim();
         if (q.Length == 0) q = "what should I do first?";
@@ -210,7 +206,7 @@ public static class AiCoach
                 .ToList()
         };
 
-        PrivacyStore.Log("hosted_ai_request", "groq");
+        PrivacyStore.Log("hosted_ai_request", "hosted");
         try
         {
             using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(90) };
@@ -223,19 +219,18 @@ public static class AiCoach
                 return answer.GetString()!.Trim();
             var err = doc.RootElement.TryGetProperty("error", out var e) ? e.GetString() : json;
             if (res.StatusCode == System.Net.HttpStatusCode.ServiceUnavailable)
-                return "Hosted DeGoogle AI is wired, but the license server has no Groq key yet. Add GROQ_API_KEY to license-api and keep the server running. Meanwhile use Ask AI with your own key.";
+                return UserFacing.HostedAiOffline();
             if (res.StatusCode == (System.Net.HttpStatusCode)402)
-                return HostedAnswerUnavailable();
-            return string.IsNullOrWhiteSpace(err) ? ("Hosted AI HTTP " + (int)res.StatusCode) : err;
+                return UserFacing.HostedAiUnavailable();
+            return UserFacing.SanitizeProviderError(err);
         }
         catch (HttpRequestException)
         {
-            return "Could not reach the license server at " + StripeStore.LicenseApiUrl +
-                   ". Start license-api (it must have GROQ_API_KEY) or set DGK_LICENSE_API. Offline answers still work.";
+            return UserFacing.HostedAiOffline();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return "Hosted AI failed: " + ex.Message;
+            return UserFacing.HostedAiOffline();
         }
     }
 
@@ -329,11 +324,10 @@ public static class AiCoach
     private static string FriendlyProviderError(int status, string json, string model)
     {
         if (status == 404)
-            return "Groq returned 404 for model “" + model +
-                   "”. That usually means an old Llama id (those 404 now). DeGoogle Kit uses openai/gpt-oss-120b. Leave Model blank under Advanced and send again. Key: console.groq.com/keys";
+            return "That AI model is no longer available. Leave Model blank under Advanced (we pick a working one), get a key at console.groq.com/keys, and try Send again.";
         if (status == 401 || status == 403)
-            return "That API key was rejected. Get a Groq key at console.groq.com/keys (it starts with gsk_) and paste it in Connect Groq.";
-        return $"Provider error {status}: {Trim(json, 400)}";
+            return "That API key was rejected. Get a free key at console.groq.com/keys (it starts with gsk_) and paste it under Connect.";
+        return UserFacing.SanitizeProviderError($"Provider error {status}: {Trim(json, 280)}");
     }
 
     private static async Task<string> CallAnthropic(HttpClient http, string key, string payload, string model, CancellationToken ct)

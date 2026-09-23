@@ -44,6 +44,18 @@ public partial class AccountDialog : Window
         }
     }
 
+    private void OnOpenWebsite(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(LegalCopy.WebsiteAccountUrl) { UseShellExecute = true });
+        }
+        catch
+        {
+            StatusText.Text = LegalCopy.WebsiteAccountUrl;
+        }
+    }
+
     private async Task RunAsync(bool signUp)
     {
         if (signUp && AccountConsentBox.IsChecked != true)

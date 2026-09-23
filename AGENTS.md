@@ -13,14 +13,28 @@ Scan this Windows PC → pick replacements → parse Google Takeout locally → 
 | Repo | Role |
 |------|------|
 | `OpolyCorporation/degoogle-kit` (this) | WPF app (`net10.0-windows`), license-api, GitHub Pages legal HTML under `docs/` |
-| `OpolyCorporation/degoogle` | Public website (TanStack Start + Lovable): download CTA, FAQ, install, ask-assistant |
+| `OpolyCorporation/degoogle` | Public website (TanStack Start + Lovable): download CTA, FAQ, install, ask-assistant, **shared free account** at `/account` |
 
 **Public download URL (do not invent another):**  
 `https://github.com/OpolyCorporation/degoogle-kit/releases/latest/download/DeGoogleKit-win-x64.zip`
 
+**Website account (same Supabase as this app):**  
+Preview: `https://id-preview--d11fe691-44fe-4cc4-84a5-135f3b0e7341.lovable.app/account`  
+In-app: `LegalCopy.WebsiteAccountUrl` — update `LegalCopy.WebsiteUrl` when a custom domain is live.
+
 **Legal pages (also mirrored in-app as `LegalCopy`):**  
 `https://opolycorporation.github.io/degoogle-kit/privacy.html`  
 `https://opolycorporation.github.io/degoogle-kit/terms.html`
+
+## Shared free account
+
+One email/password account works in **both** the Windows app and the website:
+
+- Supabase Auth + RLS tables `progress`, `licenses`, `keepalive` (see `supabase/schema.sql` / `cloud/supabase.json`)
+- App: Pro tab → Sign in / Create account; also **Open account on website**
+- Website: `/account` — sign up/in, view synced checklist/plan summary and linked license
+- Never put the **service role** key in the app or website; only the public anon key
+- Product positioning: **app is the sell**; website is download + account + future light dashboard
 
 ## Stack (app)
 

@@ -95,7 +95,20 @@
                 </Grid.RowDefinitions>
                 <StackPanel>
                     <TextBlock Text="Overview" FontSize="26" FontWeight="SemiBold"/>
-                    <TextBlock Text="Tell us what you use. Pick replacements. We move what we can locally. Nothing is deleted from Google until you verify." Foreground="{StaticResource Muted}" Margin="0,6,0,10" TextWrapping="Wrap"/>
+                    <TextBlock Text="Leave Google in order: scan → plan → Takeout → verify → disconnect. Nothing is deleted until you do it yourself." Foreground="{StaticResource Muted}" Margin="0,6,0,12" TextWrapping="Wrap"/>
+                    <Border Style="{StaticResource CardBorder}" Margin="0,0,0,14" Padding="14">
+                        <StackPanel>
+                            <TextBlock Text="Start here" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                            <UniformGrid Columns="4">
+                                <Button Content="1 · Scan this PC" Style="{StaticResource GhostBtn}" Click="OnOpenPc" Margin="0,0,8,0" Padding="10,8"/>
+                                <Button Content="2 · Your plan" Style="{StaticResource GhostBtn}" Click="OnOpenPlan" Margin="0,0,8,0" Padding="10,8"/>
+                                <Button Content="3 · Drop Takeout" Style="{StaticResource PrimaryBtn}" Click="OnOpenTakeout" Margin="0,0,8,0" Padding="10,8"/>
+                                <Button Content="4 · Ask coach" Style="{StaticResource GhostBtn}" Click="OnOpenCoach" Margin="0,0,0,0" Padding="10,8"/>
+                            </UniformGrid>
+                            <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,10,0,0" FontSize="12.5"
+                                       Text="Scan and Takeout stay on this PC. The coach works offline; optional chat needs your own key. Pro is optional extras."/>
+                        </StackPanel>
+                    </Border>
                     <Border x:Name="ScanRibbon" Height="3" CornerRadius="2" Margin="0,0,0,14" Opacity="0" HorizontalAlignment="Stretch"
                             RenderTransformOrigin="0,0.5">
                         <Border.RenderTransform>
@@ -134,11 +147,12 @@
                     </Border>
                     <Border x:Name="CardCenter" Style="{StaticResource CardBorder}" Margin="10,10,0,0">
                         <StackPanel>
-                            <TextBlock Text="Centerpiece" Foreground="{StaticResource Muted}"/>
+                            <TextBlock Text="What to do next" Foreground="{StaticResource Muted}"/>
                             <TextBlock x:Name="CenterHint" Text="Drop your Google Takeout here. We'll figure out the rest — on this PC, never on our servers." FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" Margin="0,10,0,12"/>
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="Open Takeout drop" Style="{StaticResource PrimaryBtn}" Click="OnOpenTakeout" Margin="0,0,8,0"/>
-                                <Button Content="Your plan" Style="{StaticResource GhostBtn}" Click="OnOpenPlan"/>
+                                <Button Content="Open Takeout" Style="{StaticResource PrimaryBtn}" Click="OnOpenTakeout" Margin="0,0,8,0"/>
+                                <Button Content="Your plan" Style="{StaticResource GhostBtn}" Click="OnOpenPlan" Margin="0,0,8,0"/>
+                                <Button Content="Coach" Style="{StaticResource GhostBtn}" Click="OnOpenCoach"/>
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -435,7 +449,7 @@
                             <Button Content="Send" Style="{StaticResource PrimaryBtn}" Click="OnAskCloud" Margin="8,0,0,0" Padding="16,9"/>
                             <Button Content="Offline" Style="{StaticResource GhostBtn}" Click="OnAskOffline" Margin="8,0,0,0" Padding="14,8"/>
                             <Button Content="Topics" Style="{StaticResource GhostBtn}" Click="OnOfflineTopics" Margin="8,0,0,0" Padding="14,8"/>
-                            <Button Content="DeGoogle AI" Style="{StaticResource GhostBtn}" Click="OnAskHosted" Margin="8,0,0,0" Padding="14,8"/>
+                            <Button x:Name="HostedAiBtn" Content="DeGoogle AI" Style="{StaticResource GhostBtn}" Click="OnAskHosted" Margin="8,0,0,0" Padding="14,8" Visibility="Collapsed"/>
                         </StackPanel>
                         <Grid MinHeight="40">
                             <TextBox x:Name="ChatInput" MinHeight="40" VerticalContentAlignment="Center" TextWrapping="Wrap" AcceptsReturn="False"
@@ -565,12 +579,13 @@
                             <StackPanel>
                                 <TextBlock Text="Free account" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8"
-                                           Text="Free: your plan and guide checklist sync across PCs after you allow Supabase (not Google). API keys, Takeout files, and scan results stay on this PC. If you later pay, Pro follows this same account."/>
+                                           Text="Free: your plan and guide checklist sync across PCs after you allow Supabase (not Google). API keys, Takeout files, and scan results stay on this PC. If you later pay, Pro follows this same account. You can also create or manage the same account on the website."/>
                                 <TextBlock x:Name="AccountStatus" Foreground="{StaticResource Accent}" TextWrapping="Wrap" Margin="0,0,0,10"
                                            Text="Signed out. Create a free account to back up your plan and checklist."/>
-                                <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                                     <Button Content="Sign in / Create account" Style="{StaticResource PrimaryBtn}" Click="OnAccountSignIn" Margin="0,0,8,0"/>
-                                    <Button Content="Sign out" Style="{StaticResource GhostBtn}" Click="OnAccountSignOut"/>
+                                    <Button Content="Sign out" Style="{StaticResource GhostBtn}" Click="OnAccountSignOut" Margin="0,0,8,0"/>
+                                    <Button Content="Open account on website" Style="{StaticResource GhostBtn}" Click="OnOpenWebsiteAccount"/>
                                 </StackPanel>
                             </StackPanel>
                         </Border>
@@ -578,9 +593,9 @@
                             <StackPanel>
                                 <TextBlock Text="Lifetime Pro — €29.99 once (family €59.99, up to 3 PCs)" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
-                                    Pay with Stripe Checkout in your browser. After payment, this app fills the signed license key below and turns Pro on. Sign in first if you want that Pro license on other PCs too. You can also paste a key (DGK2…) or a Checkout session id (cs_…).
+                                    Pay in your browser. After Checkout, this app can fill your license key and turn Pro on. Sign in first if you want Pro on other PCs too. You can also paste a license key or Checkout session id.
                                 </TextBlock>
-                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Checkout opens Stripe in your browser. Cards never touch this app. By paying you agree to the terms (v4). EU/EEA: 14 days to withdraw if the key is not activated. Cloud Pass is not billed until the live Stripe catalog is on. EU VAT: add a Stripe Tax registration before turning automatic tax on."/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Cards never enter this app. By paying you agree to the terms (v4). EU/EEA: 14 days to withdraw if the key is not activated."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <Button Content="Buy Lifetime €29.99" Style="{StaticResource PrimaryBtn}" Click="OnBuyLifetime" Margin="0,0,8,0"/>
                                     <Button Content="Buy Family €59.99" Style="{StaticResource GhostBtn}" Click="OnBuyFamily" Margin="0,0,8,0"/>
@@ -588,15 +603,15 @@
                                 </StackPanel>
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right" Content="Activate license" Style="{StaticResource PrimaryBtn}" Click="OnActivateKey" Margin="8,0,0,0"/>
-                                    <TextBox x:Name="LicenseBox" ToolTip="Paid key (DGK2…) is stored here. You can also paste a Stripe session id (cs_…)."/>
+                                    <TextBox x:Name="LicenseBox" ToolTip="Paste your license key or Stripe Checkout session id."/>
                                 </DockPanel>
                             </StackPanel>
                         </Border>
-                        <Border Style="{StaticResource CardBorder}">
+                        <Border x:Name="CloudPassCard" Style="{StaticResource CardBorder}">
                             <StackPanel>
-                                <TextBlock Text="Cloud Pass — €4.99/month or €39/year" FontWeight="SemiBold"/>
+                                <TextBlock Text="Cloud Pass — coming soon" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0">
-                                    Hosted DeGoogle AI on Groq GPT-OSS 120B (we pay Groq; the key never sits in this app). About $0.15 / $0.60 per million tokens. We are not charging Cloud Pass until the live Stripe catalog is on.
+                                    Optional subscription where we run DeGoogle AI for you. Not for sale yet. Until then, Offline and Topics are free, and Send works with your own key (stored only on this PC).
                                 </TextBlock>
                             </StackPanel>
                         </Border>
@@ -649,7 +664,7 @@
                             <StackPanel>
                                 <TextBlock Text="Legal" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"
-                                           Text="Privacy notice v3 covers local files, the optional free account (Supabase, including trial start on that account), Stripe payments, and GitHub updates. Terms cover the 14-day EU withdrawal for an unused license key."/>
+                                           Text="Privacy notice v4 covers local files, the optional free account, payments, updates, and optional AI you choose. Terms cover the 14-day EU withdrawal for an unused license key."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <Button Content="Open privacy notice" Style="{StaticResource GhostBtn}" Click="OnOpenPrivacyNotice" Margin="0,0,8,0"/>
                                     <Button Content="Open terms" Style="{StaticResource GhostBtn}" Click="OnOpenTerms"/>

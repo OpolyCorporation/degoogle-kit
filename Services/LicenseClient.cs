@@ -35,26 +35,22 @@ public static class LicenseClient
             var json = await res.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json);
             if (!res.IsSuccessStatusCode)
-            {
-                var err = doc.RootElement.TryGetProperty("error", out var e) ? e.GetString() : json;
-                return (false, err ?? ("License server HTTP " + (int)res.StatusCode), null);
-            }
+                return (false, UserFacing.LicenseServerBusy(), null);
 
             if (!doc.RootElement.TryGetProperty("key", out var keyEl))
-                return (false, "License server did not return a key.", null);
+                return (false, UserFacing.LicenseServerBusy(), null);
             var key = keyEl.GetString();
             if (string.IsNullOrWhiteSpace(key) || !key.StartsWith("DGK2.", StringComparison.Ordinal))
-                return (false, "License server returned a key this app cannot verify.", null);
+                return (false, "That payment could not be turned into a license this app recognizes. Open a GitHub issue with subject “License”.", null);
             return (true, "License issued.", key);
         }
         catch (HttpRequestException)
         {
-            return (false, "Could not reach the license server at " + StripeStore.LicenseApiUrl +
-                           ". Start license-api locally or set DGK_LICENSE_API to your live server.", null);
+            return (false, UserFacing.LicenseRedeemOffline(), null);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return (false, ex.Message, null);
+            return (false, UserFacing.LicenseRedeemOffline(), null);
         }
     }
 }

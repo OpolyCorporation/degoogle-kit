@@ -25,7 +25,7 @@ public static class AiProviders
             DefaultModel = "openai/gpt-oss-120b",
             ChatUrl = "https://api.groq.com/openai/v1/chat/completions",
             KeyUrl = "https://console.groq.com/keys",
-            Hint = "Click Get a key → console.groq.com → API keys → paste it. We pick GPT-OSS 120B for you. Old Llama ids on Groq now 404."
+            Hint = "Click Get a key → create a free key → paste it below. We pick the model. Your key stays on this PC."
         },
         new()
         {

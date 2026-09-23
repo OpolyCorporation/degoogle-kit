@@ -2,21 +2,20 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Welcome — DeGoogle Kit"
-        Height="760" Width="720"
+        Height="800" Width="720"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{StaticResource Bg}">
     <DockPanel Margin="28">
         <StackPanel DockPanel.Dock="Bottom">
-            <CheckBox x:Name="AgeBox" Content="I am 16 or older, or I have a parent/guardian’s consent (GDPR Art. 8)." Margin="0,0,0,8"/>
-            <CheckBox x:Name="LocalBox" Content="I understand this app stores data on this PC (AppData\DeGoogleKit). An account is optional and asked separately." Margin="0,0,0,8"/>
-            <CheckBox x:Name="ScanBox" Content="Allow a read-only scan of this PC (programs, default browser, Google folders, tasks, DNS)." Margin="0,0,0,8"/>
-            <CheckBox x:Name="PrivacyBox" Content="I have read the privacy notice (v3) and I agree (GDPR Arts. 7 and 13)." Margin="0,0,0,8"/>
+            <CheckBox x:Name="AgeBox" Content="I am 16 or older, or I have a parent/guardian’s consent." Margin="0,0,0,8"/>
+            <CheckBox x:Name="LocalBox" Content="I understand this app stores its files on this PC (AppData\DeGoogleKit)." Margin="0,0,0,8"/>
+            <CheckBox x:Name="ScanBox" Content="Allow a read-only scan of this PC (programs, browser, Google folders, DNS)." Margin="0,0,0,8"/>
+            <CheckBox x:Name="PrivacyBox" Content="I have read the privacy notice below and I agree." Margin="0,0,0,8"/>
             <CheckBox x:Name="SupabaseBox" Margin="0,0,0,14">
-                <TextBlock TextWrapping="Wrap" Text="Allow this app to use Supabase (not Google) for an optional free account. Leave unticked to stay local-only. You can change this later in Privacy or when you sign in."/>
+                <TextBlock TextWrapping="Wrap" Text="Optional: allow an account backup later (not Google). Leave unticked to stay fully local."/>
             </CheckBox>
-            <TextBlock Text="Optional — after this screen the app is ready. Pro is not required." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-            <CheckBox x:Name="DesktopShortcutBox" Content="Add a Desktop shortcut to DeGoogleKit.exe" IsChecked="True" Margin="0,0,0,8"/>
+            <CheckBox x:Name="DesktopShortcutBox" Content="Add a Desktop shortcut" IsChecked="True" Margin="0,0,0,8"/>
             <CheckBox x:Name="StartMenuShortcutBox" Content="Add a Start menu shortcut" IsChecked="True" Margin="0,0,0,14"/>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="Cancel" Style="{StaticResource GhostBtn}" Click="OnCancel" Margin="0,0,8,0" Padding="18,8"/>
@@ -33,14 +32,25 @@
                     </Border>
                     <StackPanel Margin="14,4,0,0" VerticalAlignment="Center">
                         <TextBlock Text="DeGoogle Kit" FontSize="22" FontWeight="Bold"/>
-                        <TextBlock Text="Your tools. Your PC. Not Google." Foreground="{StaticResource Accent}" FontSize="13"/>
+                        <TextBlock Text="Leave Google without wrecking your PC" Foreground="{StaticResource Accent}" FontSize="13"/>
                     </StackPanel>
                 </StackPanel>
-                <TextBlock Text="Before we start" FontSize="22" FontWeight="SemiBold"/>
-                <TextBlock Text="DeGoogle Kit is a local tool by default. Required boxes start unchecked — GDPR needs consent that is specific, informed, and freely given." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,8,0,16"/>
+                <TextBlock Text="How it works" FontSize="20" FontWeight="SemiBold"/>
+                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,10"
+                           Text="Nothing is deleted from Google automatically. You choose every uninstall and disconnect step."/>
+                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,14" Padding="14">
+                    <StackPanel>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"><Run FontWeight="SemiBold" Text="1. Scan"/> — see what Google software is on this PC.</TextBlock>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"><Run FontWeight="SemiBold" Text="2. Plan"/> — pick replacements (mail, photos, browser…).</TextBlock>
+                        <TextBlock TextWrapping="Wrap" Margin="0,0,0,8"><Run FontWeight="SemiBold" Text="3. Takeout"/> — drop your Google export; we parse it only on this PC.</TextBlock>
+                        <TextBlock TextWrapping="Wrap"><Run FontWeight="SemiBold" Text="4. Disconnect"/> — after counts match, you disconnect on Google’s site.</TextBlock>
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="Privacy notice" FontSize="18" FontWeight="SemiBold"/>
+                <TextBlock Text="Required boxes start unchecked. Scroll and tick the ones you agree with." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,12"/>
                 <Border Style="{StaticResource CardBorder}">
                     <TextBox x:Name="NoticeBox" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
-                             VerticalScrollBarVisibility="Auto" Height="280" BorderThickness="0"
+                             VerticalScrollBarVisibility="Auto" Height="220" BorderThickness="0"
                              Background="Transparent" Foreground="{StaticResource Text}" FontSize="13"
                              CaretBrush="{StaticResource Text}"/>
                 </Border>
