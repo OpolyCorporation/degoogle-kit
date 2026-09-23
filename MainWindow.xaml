@@ -591,20 +591,33 @@
                         </Border>
                         <Border x:Name="ProLifetimeCard" Style="{StaticResource CardBorder}">
                             <StackPanel>
-                                <TextBlock Text="Lifetime Pro — €29.99 once (family €59.99, up to 3 PCs)" FontWeight="SemiBold"/>
+                                <TextBlock Text="Lifetime Pro — €29.99 once" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
-                                    Pay in your browser. After Checkout, this app can fill your license key and turn Pro on. Sign in first if you want Pro on other PCs too. You can also paste a license key or Checkout session id.
+                                    One PC. Unlocks Quad9 DNS apply and the HTML report. Pay in your browser; after Checkout this app can fill the key. Sign in first if you want the same Pro on another PC via your free account.
                                 </TextBlock>
-                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Cards never enter this app. By paying you agree to the terms (v4). EU/EEA: 14 days to withdraw if the key is not activated."/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Cards never enter this app. By paying you agree to the terms (v5). EU/EEA: 14 days to withdraw if the key is not activated."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <Button Content="Buy Lifetime €29.99" Style="{StaticResource PrimaryBtn}" Click="OnBuyLifetime" Margin="0,0,8,0"/>
-                                    <Button Content="Buy Family €59.99" Style="{StaticResource GhostBtn}" Click="OnBuyFamily" Margin="0,0,8,0"/>
                                     <Button Content="Start 7-day trial" Style="{StaticResource GhostBtn}" Click="OnStartTrial"/>
                                 </StackPanel>
                                 <DockPanel>
                                     <Button DockPanel.Dock="Right" Content="Activate license" Style="{StaticResource PrimaryBtn}" Click="OnActivateKey" Margin="8,0,0,0"/>
                                     <TextBox x:Name="LicenseBox" ToolTip="Paste your license key or Stripe Checkout session id."/>
                                 </DockPanel>
+                            </StackPanel>
+                        </Border>
+                        <Border x:Name="ProHouseholdCard" Style="{StaticResource CardBorder}">
+                            <StackPanel>
+                                <TextBlock Text="Household — €59.99 once (up to 3 PCs)" FontWeight="SemiBold"/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
+                                    Same Pro extras as Lifetime, for a household that needs several Windows PCs. One purchase, one license key — paste it on each machine (up to 3). Skip this if you only de-Google one PC; buy Lifetime instead.
+                                </TextBlock>
+                                <TextBlock x:Name="HouseholdStatus" Foreground="{StaticResource Accent}" TextWrapping="Wrap" Margin="0,0,0,10"
+                                           Text="Not started. Buy Household, then activate the key on this PC and copy it onto the others."/>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <Button Content="Start Household €59.99" Style="{StaticResource PrimaryBtn}" Click="OnBuyFamily" Margin="0,0,8,0"/>
+                                    <Button x:Name="CopyHouseholdKeyBtn" Content="Copy key for other PCs" Style="{StaticResource GhostBtn}" Click="OnCopyHouseholdKey" Visibility="Collapsed"/>
+                                </StackPanel>
                             </StackPanel>
                         </Border>
                         <Border x:Name="CloudPassCard" Style="{StaticResource CardBorder}">

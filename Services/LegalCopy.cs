@@ -6,7 +6,7 @@ namespace DeGoogleKit.Services;
 /// </summary>
 public static class LegalCopy
 {
-    public const int NoticeVersion = 4;
+    public const int NoticeVersion = 5;
 
     public const string ControllerName = "Opolyonix Corp";
     public const string Cvr = "43410369";
@@ -33,7 +33,7 @@ public static class LegalCopy
         "Who processes what\n" +
         "• Local use (default): DeGoogle Kit runs on your Windows PC. Plan, checklist, scan results, Takeout files you choose, API keys, and trial/Pro status stay in AppData\\DeGoogleKit. You are in control of that copy. Opolyonix Corp does not receive it unless you later choose an optional cloud feature.\n" +
         "• Optional free account: if you create an email/password account, Opolyonix Corp is the controller of that account. Processor: Supabase (Auth + Postgres), not Google. We store your email, a hashed password (Supabase Auth), your plan, your guide checklist, and whether this account started the Pro trial (a timestamp only) so the trial can follow you to another PC. We do not upload API keys, Takeout files, scan results, or clipboard contents.\n" +
-        "• Payments: Stripe processes Checkout for Lifetime Pro / Family. We do not store card numbers. After payment a signed license key can be linked to your account.\n" +
+        "• Payments: Stripe processes Checkout for Lifetime Pro / Household (Family). We do not store card numbers. After payment a signed license key can be linked to your account.\n" +
         "• Updates and this website: GitHub (Microsoft) hosts the Windows download, version feed, and these pages. Checking for updates is optional and sends the app version in the User-Agent.\n" +
         "• Optional Cloud AI: only if you tick a separate consent box. Ask AI with your own key sends the question and a local scan summary to the provider you pick (never Google Gemini). DeGoogle AI (Cloud Pass) sends the same kind of payload to our license server, which then calls Groq (GPT-OSS 120B) — we pay Groq; the key never sits in this app. We do not log the question. You can withdraw that consent on the Coach tab.\n\n" +
         "Purposes and legal bases (GDPR Art. 6)\n" +
@@ -58,7 +58,7 @@ public static class LegalCopy
         "The Windows app helps you leave Google on your terms. It never auto-deletes Google data or accounts. You choose each uninstall, DNS change, and Takeout step.\n\n" +
         "Free features (scan, plan, Takeout parse, catalog, GDPR templates versus Google, local coach, export/erasure of this app’s data) work without paying and without an account.\n\n" +
         "A free account is optional. It backs up plan and checklist only. You may delete it at any time.\n\n" +
-        "Lifetime Pro (" + LicenseService.LifetimePrice + " once) and Family (" + LicenseService.FamilyPrice + ", up to 3 PCs) are one-time digital licenses sold through Stripe Checkout. Cards never enter this app. Cloud Pass (" + LicenseService.CloudMonthly + " or " + LicenseService.CloudYearly + ") is hosted DeGoogle AI on Groq GPT-OSS 120B. It is not billed until the live Stripe catalog is on.\n\n" +
+        "Lifetime Pro (" + LicenseService.LifetimePrice + " once) and Household / Family (" + LicenseService.FamilyPrice + ", up to " + LicenseService.FamilySeats + " PCs) are one-time digital licenses sold through Stripe Checkout. Household is the same Pro extras for several Windows PCs in one home (one key per purchase). Cards never enter this app. Cloud Pass (" + LicenseService.CloudMonthly + " or " + LicenseService.CloudYearly + ") is hosted DeGoogle AI on Groq GPT-OSS 120B. It is not billed until the live Stripe catalog is on.\n\n" +
         "EU/EEA consumer withdrawal (forbrugeraftaleloven / Directive 2011/83/EU): you normally have 14 days to withdraw from a distance contract. Lifetime Pro is digital content delivered immediately as a license key after payment. If you ask us to supply it straight away, the 14-day right may be lost once the key is delivered and activated. If you have not activated the key, contact us within 14 days with subject “Withdrawal (consumer)” for a refund via Stripe. The Pro trial is " + LicenseService.TrialDays + " days, no card, and requires a signed-in free account so the trial can follow that account.\n\n" +
         "The software is provided as-is. It does not guarantee that Google or any replacement service will accept your export. You remain responsible for backups before you disconnect Google.\n\n" +
         "Governing law: Denmark, without limiting mandatory consumer protections in your EEA country of residence.";

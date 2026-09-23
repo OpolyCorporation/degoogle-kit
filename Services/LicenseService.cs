@@ -18,9 +18,15 @@ public static class LicenseService
 {
     public const string LifetimePrice = "€29.99";
     public const string FamilyPrice = "€59.99";
+    /// <summary>Household (Stripe sku "family") — same Pro features, one key for this many PCs.</summary>
+    public const int FamilySeats = 3;
     public const string CloudMonthly = "€4.99 / month";
     public const string CloudYearly = "€39 / year";
     public const int TrialDays = 7;
+
+    /// <summary>True when this PC has a paid multi-seat (Household) key.</summary>
+    public static bool IsHousehold =>
+        IsPro && Record.Lifetime && Record.Seats >= FamilySeats;
 
     public static LicenseRecord Record => JsonFile.Load(AppPaths.License, new LicenseRecord());
 
@@ -55,7 +61,7 @@ public static class LicenseService
             var parts = new List<string>();
             var r = Record;
             if (r.Lifetime && r.Plan.Equals("Pro", StringComparison.OrdinalIgnoreCase))
-                parts.Add(r.Seats > 1 ? $"Pro family ({r.Seats} PCs)" : "Pro lifetime");
+                parts.Add(r.Seats > 1 ? $"Pro Household ({r.Seats} PCs)" : "Pro lifetime");
             else if (r.Plan.Equals("Pro", StringComparison.OrdinalIgnoreCase) && r.KeyExpires is { } exp && exp > DateTime.Now)
                 parts.Add($"Pro — until {exp:d}");
             else if (r.Plan.Equals("Trial", StringComparison.OrdinalIgnoreCase) && r.TrialEnds is { } t && t > DateTime.Now)

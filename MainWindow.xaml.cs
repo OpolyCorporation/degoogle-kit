@@ -1127,28 +1127,73 @@ public partial class MainWindow : Window
 
     private void OnBuyLifetime(object sender, RoutedEventArgs e)
     {
-        if (!StripeStore.CatalogIsLive)
-        {
-            MessageBox.Show(
-                "Checkout is not live yet (test mode). You can still use Free features and the 7-day trial with a free account. We’ll turn paid Checkout on when the live catalog is ready.",
-                "Pro", MessageBoxButton.OK, MessageBoxImage.Information);
+        if (!ConfirmPaidCheckout(
+                "Lifetime Pro",
+                "Lifetime Pro is one PC (" + LicenseService.LifetimePrice + " once). For up to " +
+                LicenseService.FamilySeats + " PCs in the same home, use Household instead."))
             return;
-        }
         if (!TryOpenUri(StripeStore.LifetimePaymentLink)) return;
         MessageBox.Show(StripeStore.AfterCheckoutHint, "Checkout");
     }
 
     private void OnBuyFamily(object sender, RoutedEventArgs e)
     {
-        if (!StripeStore.CatalogIsLive)
+        if (!ConfirmPaidCheckout(
+                "Household",
+                "Household is Lifetime Pro for up to " + LicenseService.FamilySeats +
+                " Windows PCs (" + LicenseService.FamilyPrice + " once).\n\n" +
+                "Why it exists: one purchase for a household that is leaving Google on several machines — not a shared Netflix-style plan. " +
+                "You get one key; paste it on each PC. If you only need one PC, buy Lifetime (" +
+                LicenseService.LifetimePrice + ") instead."))
+            return;
+        if (!TryOpenUri(StripeStore.FamilyPaymentLink)) return;
+        MessageBox.Show(
+            StripeStore.AfterCheckoutHint +
+            "\n\nHousehold next step: after this PC activates, use “Copy key for other PCs” and paste the same key on up to " +
+            (LicenseService.FamilySeats - 1) + " more machines.",
+            "Checkout");
+    }
+
+    /// <summary>
+    /// Live catalog opens Checkout immediately. Test catalog asks once so we can still walk the Household flow.
+    /// </summary>
+    private bool ConfirmPaidCheckout(string planLabel, string why)
+    {
+        if (StripeStore.CatalogIsLive)
+            return true;
+        var answer = MessageBox.Show(
+            planLabel + " Checkout is still Stripe test mode (not live for customers yet).\n\n" + why +
+            "\n\nOpen test Checkout anyway? Use Stripe test cards only.",
+            planLabel,
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+        return answer == MessageBoxResult.Yes;
+    }
+
+    private void OnCopyHouseholdKey(object sender, RoutedEventArgs e)
+    {
+        var key = LicenseService.Record.Key?.Trim() ?? "";
+        if (string.IsNullOrWhiteSpace(key) || !key.StartsWith("DGK2.", StringComparison.Ordinal))
         {
             MessageBox.Show(
-                "Checkout is not live yet (test mode). Free features and the trial still work. Paid Family unlocks when live Checkout is on.",
-                "Pro", MessageBoxButton.OK, MessageBoxImage.Information);
+                "Activate a Household license on this PC first. Then you can copy the same key onto the other PCs.",
+                "Household");
             return;
         }
-        if (!TryOpenUri(StripeStore.FamilyPaymentLink)) return;
-        MessageBox.Show(StripeStore.AfterCheckoutHint, "Checkout");
+        if (!AskAccess.For(this, AccessKind.Clipboard, "Copy the Household license key to the clipboard?"))
+            return;
+        try
+        {
+            Clipboard.SetText(key);
+            MessageBox.Show(
+                "Key copied. On each other PC: install DeGoogle Kit → Pro → paste into Activate license. " +
+                "Household covers up to " + LicenseService.Record.Seats + " PCs.",
+                "Household");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show("Could not copy to the clipboard: " + UserFacing.SanitizeProviderError(ex.Message), "Household");
+        }
     }
 
     protected override void OnClosed(EventArgs e)
@@ -1236,7 +1281,8 @@ public partial class MainWindow : Window
                 else
                 {
                     var extra = LicenseService.Record.Seats > 1
-                        ? " Family covers up to " + LicenseService.Record.Seats + " PCs — copy the key below onto the others."
+                        ? " Household covers up to " + LicenseService.Record.Seats +
+                          " PCs — use “Copy key for other PCs” and paste the same key on each machine."
                         : "";
                     MessageBox.Show("Pro is on. The signed license key is in the box on the Pro tab." + extra, "License");
                 }
@@ -1447,10 +1493,27 @@ public partial class MainWindow : Window
                 || LicenseBox.Text.Trim().StartsWith("cs_", StringComparison.OrdinalIgnoreCase)
                 || LicenseBox.Text.Trim().StartsWith("DGK2.", StringComparison.Ordinal)))
             LicenseBox.Text = stored;
+
+        var householdReady = LicenseService.IsPro && LicenseService.Record.Lifetime && LicenseService.Record.Seats > 1
+                             && !string.IsNullOrWhiteSpace(stored)
+                             && stored.StartsWith("DGK2.", StringComparison.Ordinal);
+        if (CopyHouseholdKeyBtn is not null)
+            CopyHouseholdKeyBtn.Visibility = householdReady ? Visibility.Visible : Visibility.Collapsed;
+        if (HouseholdStatus is not null)
+        {
+            HouseholdStatus.Text = householdReady
+                ? "Household active on this PC (" + LicenseService.Record.Seats +
+                  " seats). Copy the key onto the other machines in the home."
+                : "Not started. Buy Household, activate the key here, then copy it onto up to " +
+                  (LicenseService.FamilySeats - 1) + " more PCs.";
+        }
+
         if (!_uiReady || LicenseBadge is null) return;
         Motion.Pop(LicenseBadge);
         if (LicenseService.IsPro)
             Motion.Pop(ProLifetimeCard);
+        if (householdReady && ProHouseholdCard is not null)
+            Motion.Pop(ProHouseholdCard);
     }
 
     private void RefreshAudit() => AuditList.ItemsSource = PrivacyStore.Audit().AsEnumerable().Reverse().Take(30).ToList();
