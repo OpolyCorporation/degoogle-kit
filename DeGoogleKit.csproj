@@ -14,8 +14,8 @@
     <Copyright>Copyright © Opolyonix Corp</Copyright>
     <Description>Windows assistant to leave Google on your terms. Local-first scan, plan, and Takeout tools. Never auto-deletes Google data.</Description>
     <NeutralLanguage>en</NeutralLanguage>
-    <Version>0.4.1</Version>
-    <InformationalVersion>0.4.1</InformationalVersion>
+    <Version>0.4.2</Version>
+    <InformationalVersion>0.4.2</InformationalVersion>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <DebugType Condition="'$(Configuration)' == 'Release'">none</DebugType>
