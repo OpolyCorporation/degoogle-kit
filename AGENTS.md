@@ -41,7 +41,7 @@ One email/password account works in **both** the Windows app and the website:
 - C# / WPF, single-file self-contained publish to `artifacts/win-x64`
 - Licensing: `Licensing/` (ECDSA tickets `DGK2.…`)
 - Backend helper: `license-api/` (Stripe session → key, optional hosted coach `/v1/coach`)
-- Optional account: Supabase Auth + Postgres (`cloud/supabase.json` anon only in app)
+- Optional account: Supabase project **degoogle** (`pgkcsbyukqmafzwpsyfo`, same as the website `/account`). Config: `cloud/supabase.json` anon only in app
 - Secrets: Windows DPAPI via `SecretStore` — never commit `.env`, service role, or signing private keys
 
 ## Brand
@@ -136,4 +136,4 @@ updates/latest.json         In-app update feed (must match GitHub release zip)
 
 ## When changing the website too
 
-Open `../degoogle` (or `C:\Users\jackj\Projects\degoogle`). Download button must keep pointing at the **latest release zip** URL above. Do not contradict Free vs Pro vs Cloud Pass status. Lovable repo: never force-push / rebase published history (see that repo’s `AGENTS.md`).
+Open `../degoogle` (or `C:\Users\jackj\Projects\degoogle`). Product accounts must stay on Supabase **degoogle** (`cloud/supabase.json`) — the website uses `VITE_DGK_SUPABASE_*` / `src/lib/config.ts` for the same project. Lovable Cloud on the site is admin-only. Download button must keep pointing at the **latest release zip** URL above. Do not contradict Free vs Pro vs Cloud Pass status. Lovable repo: never force-push / rebase published history (see that repo’s `AGENTS.md`).
