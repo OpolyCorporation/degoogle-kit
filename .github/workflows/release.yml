@@ -35,16 +35,20 @@ jobs:
           if (gh release view $tag --json tagName 2>$null) {
             gh release upload $tag @files --clobber
           } else {
-            $notes = @"
-DeGoogle Kit $tag for Windows 10/11 (64-bit).
-
-Publisher: **Opolyonix Corp** (Denmark).
-
-1. Unzip the folder.
-2. Run **Setup.cmd** (clears the download mark and installs under your user profile).
-3. If Norton or SmartScreen warns, that is an unsigned-build reputation check — restore/allow \`%LOCALAPPDATA%\\Programs\\DeGoogleKit\`. Report false positives at https://submit.norton.com/
-
-Code signing: when \`WINDOWS_CERT_PFX\` is configured in repo secrets, releases are Authenticode-signed.
-"@
-            gh release create $tag @files --title "DeGoogle Kit $tag" --notes $notes
+            $notes = @(
+              "DeGoogle Kit $tag for Windows 10/11 (64-bit).",
+              "",
+              "Publisher: **Opolyonix Corp** (Denmark).",
+              "",
+              "1. Unzip the folder.",
+              "2. Run **Setup.cmd** (clears the download mark and installs under your user profile).",
+              "3. If Norton or SmartScreen warns, that is an unsigned-build reputation check — restore/allow ``%LOCALAPPDATA%\Programs\DeGoogleKit``. Report false positives at https://submit.norton.com/",
+              "",
+              "What's new in 0.4.1: offline leave-Google guide and clearer Coach, Groq BYOK + hosted DeGoogle AI wiring, Household multi-PC start path, quieter Norton/SmartScreen packaging (multi-file Setup + optional Authenticode), privacy/terms notice v6.",
+              "",
+              "Code signing: when ``WINDOWS_CERT_PFX`` is configured in repo secrets, releases are Authenticode-signed."
+            ) -join "`n"
+            $notesFile = Join-Path $env:RUNNER_TEMP "release-notes.md"
+            Set-Content -Path $notesFile -Value $notes -Encoding utf8
+            gh release create $tag @files --title "DeGoogle Kit $tag" --notes-file $notesFile
           }
