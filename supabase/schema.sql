@@ -127,3 +127,7 @@ create table if not exists public.household_device_claims (
 
 comment on table public.household_invites is
   'Household seat invites. RPCs: household_invite, household_list_invites, household_accept_invite, household_issue_login_code, household_claim_pc_code, household_get_activation.';
+
+-- Website also uses this same project for site_events / support_messages / user_roles
+-- (visit + download counters, contact form, admin). Applied via Supabase migration
+-- site_admin_tables_on_degoogle. Do not create a second Supabase for the marketing site.
