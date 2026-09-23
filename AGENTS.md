@@ -40,7 +40,7 @@ One email/password account works in **both** the Windows app and the website:
 
 - C# / WPF, single-file self-contained publish to `artifacts/win-x64`
 - Licensing: `Licensing/` (ECDSA tickets `DGK2.…`)
-- Backend helper: `license-api/` (Stripe session → key, optional hosted coach `/v1/coach`)
+- Backend helper: website server routes mint DGK2 keys (`/v1/license`); optional `license-api/` remains for local/dev / hosted coach
 - Optional account: Supabase project **degoogle** (`pgkcsbyukqmafzwpsyfo`, same as the website `/account`). Config: `cloud/supabase.json` anon only in app
 - Secrets: Windows DPAPI via `SecretStore` — never commit `.env`, service role, or signing private keys
 
@@ -83,7 +83,7 @@ One email/password account works in **both** the Windows app and the website:
 
 - **DeGoogle AI** button → `POST {LicenseApiUrl}/v1/coach` with Cloud Pass key
 - Server uses **our** Groq key from `license-api/.env` (`GROQ_API_KEY`)
-- Default `LicenseApiUrl` is `http://127.0.0.1:5288` — not usable for public users until hosted
+- Default `LicenseApiUrl` is the marketing website (`LegalCopy.WebsiteUrl`) — set `DGK_LICENSE_API` only to override
 - Gemini / Google AI providers are **blocked** on purpose
 
 ### Honesty rules in copy and AI
@@ -121,8 +121,8 @@ updates/whats-new.txt       Short bullets shown in the update dialog — edit be
 - Builds are **not code-signed** yet unless `WINDOWS_CERT_PFX` + `WINDOWS_CERT_PASSWORD` secrets are set — SmartScreen/Norton reputation warnings are expected until then
 - To sign: buy an **OV** Authenticode cert for Opolyonix Corp (CVR 43410369), export PFX, base64-encode into GitHub secret `WINDOWS_CERT_PFX`, password in `WINDOWS_CERT_PASSWORD`, retag a release. EV is optional later if Norton stays noisy.
 - Public download stays `releases/latest/download/DeGoogleKit-win-x64.zip` (website `DOWNLOAD_URL` + in-app feed)
-- Website checkout: `/checkout` with 14-day checkbox → `/api/checkout` → license-api `POST /v1/checkout` when `LICENSE_API_URL` is set, else Stripe Payment Link fallback
-- Live Stripe catalog: see `docs/STRIPE.md` (Lifetime + Household price ids). Do **not** flip live flags until license-api is public HTTPS
+- Website checkout: `/checkout` → `/api/checkout` (Stripe Sessions when `STRIPE_API_KEY` is set) → `/api/license` mints DGK2 keys. See `docs/STRIPE.md`
+- Live Stripe catalog: Lifetime + Household price ids in `docs/STRIPE.md`. Do **not** flip live flags until secrets are set and a purchase is verified
 - App Export/Delete call Supabase `export_my_data` / `delete_my_account` (same as website MyDataPanel)
 - Releases ship as a **self-contained folder** (not `PublishSingleFile`) so fewer AVs treat the binary like a temp dropper
 - Kill `DeGoogleKit.exe` before `dotnet publish` if the file is locked
