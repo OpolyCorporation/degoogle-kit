@@ -116,7 +116,9 @@ updates/latest.json         In-app update feed (must match GitHub release zip)
 - GitHub **source** `main` includes offline guide + Groq coach UX (`343f7c7` and earlier)
 - Public **Windows zip** may still be **v0.4.0** — check `updates/latest.json` and Releases before claiming users have Coach features
 - App `Version` in `DeGoogleKit.csproj` must bump when cutting a new zip
-- Builds are **not code-signed** yet — SmartScreen “More info → Run anyway” is expected
+- Builds are **not code-signed** yet unless `WINDOWS_CERT_PFX` + `WINDOWS_CERT_PASSWORD` secrets are set — SmartScreen/Norton reputation warnings are expected until then
+- Releases ship as a **self-contained folder** (not `PublishSingleFile`) so fewer AVs treat the binary like a temp dropper
+- Kill `DeGoogleKit.exe` before `dotnet publish` if the file is locked
 
 ## Hard constraints for agents
 

@@ -10,7 +10,7 @@ Windows app to leave Google on your terms. Scan this PC, pick replacements, pars
 2. Run **Setup.cmd** (recommended) or open `DeGoogleKit.exe`.
 3. On first launch, choose Desktop and Start menu shortcuts if you want them.
 
-If Windows SmartScreen says the app is unrecognized, choose **More info → Run anyway**. Builds are not code-signed yet.
+If Windows SmartScreen or **Norton** warns, that is an unsigned-build reputation check, not a virus finding. Prefer **Setup.cmd** (clears the download mark). Norton: restore from Quarantine and allow `%LOCALAPPDATA%\Programs\DeGoogleKit`. False positive: https://submit.norton.com/. Builds ship as a folder (not one packed exe). Optional Authenticode: GitHub secrets `WINDOWS_CERT_PFX` + `WINDOWS_CERT_PASSWORD`.
 
 [All releases](https://github.com/OpolyCorporation/degoogle-kit/releases)
 
