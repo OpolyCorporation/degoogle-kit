@@ -1,7 +1,7 @@
-﻿{
-    "changelog":  "What's new in 0.4.1\n\n• Offline leave-Google guide and a clearer Coach\n• Groq BYOK coach — paste a key and ask\n• Household multi-PC start path (up to 3 seats)\n• Quieter Norton/SmartScreen packaging (Setup.cmd)\n• Privacy & terms notice v6\n\nLifetime Pro €29.99 · Household €59.99",
-    "sha256":  "4fcc6b6c665f33d4aad54c94ba2a7d76fa87477592e98c32c326c40765994aff",
-    "downloadUrl":  "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.4.1/DeGoogleKit-win-x64.zip",
-    "version":  "0.4.1",
-    "releasedAt":  "2026-09-23"
+{
+  "version": "0.4.2",
+  "sha256": "ec2ec0f0bb7a1a7f3826106d2ef76bc10afd9a014c521d76784242a16218845b",
+  "changelog": "What's new in 0.4.2\r\n\r\n• License activate and account bind use the website (no local license-api)\r\n• Buy on the site checkout page, then unlock in Pro\r\n• Export and delete account data via the shared cloud account\r\n• Privacy & terms notice v7\r\n\r\nLifetime Pro €29.99 · Household €59.99",
+  "releasedAt": "2026-09-23",
+  "downloadUrl": "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.4.2/DeGoogleKit-win-x64.zip"
 }
