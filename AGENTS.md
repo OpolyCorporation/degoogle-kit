@@ -113,8 +113,7 @@ updates/latest.json         In-app update feed (must match GitHub release zip)
 
 ## Release reality (as of 2026-09)
 
-- GitHub **source** `main` includes offline guide + Groq coach UX (`343f7c7` and earlier)
-- Public **Windows zip** may still be **v0.4.0** — check `updates/latest.json` and Releases before claiming users have Coach features
+- Public Windows zip target: **v0.4.1** (coach/Household/Norton packaging) — confirm `updates/latest.json` and GitHub Releases after CI finishes
 - App `Version` in `DeGoogleKit.csproj` must bump when cutting a new zip
 - Builds are **not code-signed** yet unless `WINDOWS_CERT_PFX` + `WINDOWS_CERT_PASSWORD` secrets are set — SmartScreen/Norton reputation warnings are expected until then
 - Releases ship as a **self-contained folder** (not `PublishSingleFile`) so fewer AVs treat the binary like a temp dropper
