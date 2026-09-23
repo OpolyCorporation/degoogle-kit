@@ -25,6 +25,12 @@ if (-not $Version) {
     $Version = $xml.Project.PropertyGroup.Version | Select-Object -First 1
 }
 
+# Prefer updates/whats-new.txt for in-app update dialog text (short bullets).
+$whatsNewPath = Join-Path $root "updates\whats-new.txt"
+if ((-not $PSBoundParameters.ContainsKey("Changelog") -or [string]::IsNullOrWhiteSpace($Changelog) -or $Changelog -eq "Bug fixes and improvements." -or $Changelog -eq "See the GitHub release notes.") -and (Test-Path $whatsNewPath)) {
+    $Changelog = (Get-Content -Raw -Path $whatsNewPath).Trim()
+}
+
 $outDir = Join-Path $root "artifacts\win-x64"
 $zip = Join-Path $root "artifacts\DeGoogleKit-win-x64.zip"
 if (Test-Path $outDir) { Remove-Item $outDir -Recurse -Force }

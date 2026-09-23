@@ -1,0 +1,9 @@
+What's new in 0.4.1
+
+• Offline leave-Google guide and a clearer Coach
+• Groq BYOK coach — paste a key and ask
+• Household multi-PC start path (up to 3 seats)
+• Quieter Norton/SmartScreen packaging (Setup.cmd)
+• Privacy & terms notice v6
+
+Lifetime Pro €29.99 · Household €59.99

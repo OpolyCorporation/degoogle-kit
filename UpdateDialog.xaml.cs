@@ -14,9 +14,18 @@ public partial class UpdateDialog : Window
         ThemeChrome.Apply(this);
         _manifest = manifest;
         VersionText.Text = $"v{AppInfo.VersionText}  →  v{manifest.Version}";
-        ChangelogText.Text = string.IsNullOrWhiteSpace(manifest.Changelog)
-            ? "A newer DeGoogle Kit is ready. The download is signed with a checksum and comes from the HTTPS feed in Privacy — never Google."
-            : manifest.Changelog;
+        var notes = (manifest.Changelog ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(notes)
+            || notes.Equals("See the GitHub release notes.", StringComparison.OrdinalIgnoreCase)
+            || notes.Equals("Bug fixes and improvements.", StringComparison.OrdinalIgnoreCase))
+        {
+            notes =
+                $"What's new in {manifest.Version}\n\n" +
+                "• Bug fixes and improvements\n\n" +
+                "Full notes are on the GitHub release page if you want more detail.";
+        }
+
+        ChangelogText.Text = notes.Replace("\r\n", "\n").Replace('\r', '\n');
         var when = DateTime.Today.AddDays(1);
         MidnightBtn.Content = $"At midnight ({when:ddd} 00:00) — install while I sleep";
     }

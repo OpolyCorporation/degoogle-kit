@@ -109,11 +109,13 @@ Services/LegalCopy.cs       Privacy/terms text (single source for notice version
 license-api/                Stripe redeem + /v1/coach
 docs/                       GitHub Pages privacy/terms/landing
 updates/latest.json         In-app update feed (must match GitHub release zip)
+updates/whats-new.txt       Short bullets shown in the update dialog — edit before each tag
 ```
 
 ## Release reality (as of 2026-09)
 
 - Public Windows zip target: **v0.4.1** (coach/Household/Norton packaging) — confirm `updates/latest.json` and GitHub Releases after CI finishes
+- Before tagging: rewrite `updates/whats-new.txt` with short “What’s new” bullets (CI copies them into `latest.json` changelog)
 - App `Version` in `DeGoogleKit.csproj` must bump when cutting a new zip
 - Builds are **not code-signed** yet unless `WINDOWS_CERT_PFX` + `WINDOWS_CERT_PASSWORD` secrets are set — SmartScreen/Norton reputation warnings are expected until then
 - Releases ship as a **self-contained folder** (not `PublishSingleFile`) so fewer AVs treat the binary like a temp dropper
