@@ -122,6 +122,7 @@ updates/whats-new.txt       Short bullets shown in the update dialog — edit be
 - To sign: buy an **OV** Authenticode cert for Opolyonix Corp (CVR 43410369), export PFX, base64-encode into GitHub secret `WINDOWS_CERT_PFX`, password in `WINDOWS_CERT_PASSWORD`, retag a release. EV is optional later if Norton stays noisy.
 - Public download stays `releases/latest/download/DeGoogleKit-win-x64.zip` (website `DOWNLOAD_URL` + in-app feed)
 - Website checkout: `/checkout` with 14-day checkbox → `/api/checkout` → license-api `POST /v1/checkout` when `LICENSE_API_URL` is set, else Stripe Payment Link fallback
+- Live Stripe catalog: see `docs/STRIPE.md` (Lifetime + Household price ids). Do **not** flip live flags until license-api is public HTTPS
 - App Export/Delete call Supabase `export_my_data` / `delete_my_account` (same as website MyDataPanel)
 - Releases ship as a **self-contained folder** (not `PublishSingleFile`) so fewer AVs treat the binary like a temp dropper
 - Kill `DeGoogleKit.exe` before `dotnet publish` if the file is locked

@@ -162,8 +162,8 @@ app.MapPost("/v1/checkout", async (HttpRequest request, IConfiguration config) =
         return Results.BadRequest(new { error = "sku must be lifetime or household." });
 
     var priceId = sku == "family"
-        ? (Environment.GetEnvironmentVariable("STRIPE_PRICE_FAMILY") ?? config["Stripe:PriceFamily"])
-        : (Environment.GetEnvironmentVariable("STRIPE_PRICE_LIFETIME") ?? config["Stripe:PriceLifetime"]);
+        ? EnvOrConfig(config, "STRIPE_PRICE_FAMILY", "Stripe:PriceFamily", "price_1UIxMkFdVhE7n9ZocPhNLWSF")
+        : EnvOrConfig(config, "STRIPE_PRICE_LIFETIME", "Stripe:PriceLifetime", "price_1UIxMfFdVhE7n9ZovlWDpG1V");
     if (string.IsNullOrWhiteSpace(priceId))
         return Results.Json(new { error = "Stripe price id is not configured for that plan." }, statusCode: 503);
 
@@ -218,8 +218,46 @@ app.MapPost("/webhook", async (HttpRequest request, IConfiguration config) =>
     try
     {
         var stripeEvent = EventUtility.ConstructEvent(json, signature, secret, throwOnApiVersionMismatch: false);
-        _ = stripeEvent.Type;
-        return Results.Ok(new { received = true });
+        if (stripeEvent.Type is "checkout.session.completed" or "checkout.session.async_payment_succeeded")
+        {
+            if (stripeEvent.Data.Object is not Session session)
+                return Results.Ok(new { received = true, ignored = "not_session" });
+
+            var apiKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY") ?? config["Stripe:ApiKey"];
+            var pem = Environment.GetEnvironmentVariable("LICENSE_SIGNING_KEY") ?? config["License:SigningKey"];
+            if (string.IsNullOrWhiteSpace(apiKey) || string.IsNullOrWhiteSpace(pem))
+                return Results.Ok(new { received = true, fulfilled = false, reason = "missing_keys" });
+
+            var stripe = new StripeClient(apiKey);
+            var sessions = new SessionService(stripe);
+            var full = await sessions.GetAsync(session.Id, new SessionGetOptions
+            {
+                Expand = ["line_items.data.price.product"]
+            });
+            if (!string.Equals(full.PaymentStatus, "paid", StringComparison.OrdinalIgnoreCase))
+                return Results.Ok(new { received = true, fulfilled = false, status = full.PaymentStatus });
+
+            var (sku, seats) = ResolveSku(full, config);
+            if (string.IsNullOrWhiteSpace(sku) || sku.StartsWith("cloud", StringComparison.OrdinalIgnoreCase))
+                return Results.Ok(new { received = true, fulfilled = false, reason = "unknown_or_cloud_sku" });
+
+            // Signing is deterministic from session id — same key as GET /v1/license.
+            var created = full.Created == default
+                ? DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                : new DateTimeOffset(DateTime.SpecifyKind(full.Created, DateTimeKind.Utc)).ToUnixTimeSeconds();
+            var ticket = LicenseTicket.Sign(new LicensePayload
+            {
+                V = 1,
+                Sku = sku,
+                Seats = seats,
+                Sid = full.Id,
+                Iat = created
+            }, pem);
+            Console.WriteLine($"stripe_fulfill session={full.Id} sku={sku} seats={seats} key_prefix={ticket[..Math.Min(12, ticket.Length)]}…");
+            return Results.Ok(new { received = true, fulfilled = true, sku, seats, session_id = full.Id });
+        }
+
+        return Results.Ok(new { received = true, type = stripeEvent.Type });
     }
     catch (StripeException ex)
     {
@@ -229,15 +267,27 @@ app.MapPost("/webhook", async (HttpRequest request, IConfiguration config) =>
 
 app.Run();
 
+static string? EnvOrConfig(IConfiguration config, string envName, string configKey, string? fallback = null)
+{
+    var env = Environment.GetEnvironmentVariable(envName);
+    if (!string.IsNullOrWhiteSpace(env)) return env.Trim();
+    var cfg = config[configKey];
+    if (!string.IsNullOrWhiteSpace(cfg)) return cfg.Trim();
+    return fallback;
+}
+
 static (string? Sku, int Seats) ResolveSku(Session session, IConfiguration config)
 {
     if (TryMeta(session.Metadata, out var sku, out var seats))
         return (sku, seats);
 
-    var lifetimePrice = Environment.GetEnvironmentVariable("STRIPE_PRICE_LIFETIME") ?? config["Stripe:PriceLifetime"];
-    var familyPrice = Environment.GetEnvironmentVariable("STRIPE_PRICE_FAMILY") ?? config["Stripe:PriceFamily"];
-    var cloudMonth = Environment.GetEnvironmentVariable("STRIPE_PRICE_CLOUD_MONTHLY") ?? config["Stripe:PriceCloudMonthly"];
-    var cloudYear = Environment.GetEnvironmentVariable("STRIPE_PRICE_CLOUD_YEARLY") ?? config["Stripe:PriceCloudYearly"];
+    // Live catalog defaults (docs/STRIPE.md) — override with env for test mode.
+    var lifetimePrice = EnvOrConfig(config, "STRIPE_PRICE_LIFETIME", "Stripe:PriceLifetime",
+        "price_1UIxMfFdVhE7n9ZovlWDpG1V");
+    var familyPrice = EnvOrConfig(config, "STRIPE_PRICE_FAMILY", "Stripe:PriceFamily",
+        "price_1UIxMkFdVhE7n9ZocPhNLWSF");
+    var cloudMonth = EnvOrConfig(config, "STRIPE_PRICE_CLOUD_MONTHLY", "Stripe:PriceCloudMonthly");
+    var cloudYear = EnvOrConfig(config, "STRIPE_PRICE_CLOUD_YEARLY", "Stripe:PriceCloudYearly");
 
     foreach (var item in session.LineItems?.Data ?? [])
     {
