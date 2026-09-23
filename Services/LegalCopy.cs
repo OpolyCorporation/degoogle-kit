@@ -6,7 +6,7 @@ namespace DeGoogleKit.Services;
 /// </summary>
 public static class LegalCopy
 {
-    public const int NoticeVersion = 5;
+    public const int NoticeVersion = 6;
 
     public const string ControllerName = "Opolyonix Corp";
     public const string Cvr = "43410369";
@@ -32,7 +32,8 @@ public static class LegalCopy
         " with the subject “Privacy (GDPR)” or “Withdrawal (consumer)”. Do not send Takeout archives or passwords.\n\n" +
         "Who processes what\n" +
         "• Local use (default): DeGoogle Kit runs on your Windows PC. Plan, checklist, scan results, Takeout files you choose, API keys, and trial/Pro status stay in AppData\\DeGoogleKit. You are in control of that copy. Opolyonix Corp does not receive it unless you later choose an optional cloud feature.\n" +
-        "• Optional free account: if you create an email/password account, Opolyonix Corp is the controller of that account. Processor: Supabase (Auth + Postgres), not Google. We store your email, a hashed password (Supabase Auth), your plan, your guide checklist, and whether this account started the Pro trial (a timestamp only) so the trial can follow you to another PC. We do not upload API keys, Takeout files, scan results, or clipboard contents.\n" +
+        "• Household invites: a Household owner may invite other emails from the website account page. Invitees receive hashed one-time website login codes until they claim a PC code; until then we do not share the Household license key or the owner’s plan backup with that invitee.
+• Optional free account: if you create an email/password account, Opolyonix Corp is the controller of that account. Processor: Supabase (Auth + Postgres), not Google. We store your email, a hashed password (Supabase Auth), your plan, your guide checklist, and whether this account started the Pro trial (a timestamp only) so the trial can follow you to another PC. We do not upload API keys, Takeout files, scan results, or clipboard contents.\n" +
         "• Payments: Stripe processes Checkout for Lifetime Pro / Household (Family). We do not store card numbers. After payment a signed license key can be linked to your account.\n" +
         "• Updates and this website: GitHub (Microsoft) hosts the Windows download, version feed, and these pages. Checking for updates is optional and sends the app version in the User-Agent.\n" +
         "• Optional Cloud AI: only if you tick a separate consent box. Ask AI with your own key sends the question and a local scan summary to the provider you pick (never Google Gemini). DeGoogle AI (Cloud Pass) sends the same kind of payload to our license server, which then calls Groq (GPT-OSS 120B) — we pay Groq; the key never sits in this app. We do not log the question. You can withdraw that consent on the Coach tab.\n\n" +

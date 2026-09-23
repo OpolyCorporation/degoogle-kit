@@ -83,3 +83,47 @@ create policy licenses_select_own on public.licenses
   using (user_id = auth.uid());
 
 -- Clients cannot write licenses. The license-api uses the service role after Stripe says paid.
+
+grant select on table public.licenses to authenticated;
+
+-- Household invites (website account). Owner with sku family/household invites by email.
+-- Invitees get hashed one-time website login codes until they claim a PC code.
+-- Unclaimed invitees never receive license_key via household_* RPCs (data minimization).
+-- Full SQL also applied via Supabase migrations household_invites_login_codes + household_rpc_functions.
+
+create table if not exists public.household_invites (
+  id uuid primary key default gen_random_uuid(),
+  owner_user_id uuid not null references auth.users (id) on delete cascade,
+  invitee_email text not null,
+  invite_token text not null unique,
+  status text not null default 'invited'
+    check (status in ('invited', 'accepted', 'claimed', 'revoked')),
+  accepted_user_id uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  accepted_at timestamptz,
+  claimed_at timestamptz,
+  revoked_at timestamptz,
+  constraint household_invites_email_owner_unique unique (owner_user_id, invitee_email)
+);
+
+create table if not exists public.household_login_codes (
+  id uuid primary key default gen_random_uuid(),
+  invite_id uuid not null references public.household_invites (id) on delete cascade,
+  code_hash text not null,
+  expires_at timestamptz not null,
+  consumed_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.household_device_claims (
+  id uuid primary key default gen_random_uuid(),
+  invite_id uuid not null unique references public.household_invites (id) on delete cascade,
+  seat_index int not null check (seat_index >= 1),
+  device_label text,
+  pc_code_hash text not null,
+  claimed_at timestamptz not null default now(),
+  revoked_at timestamptz
+);
+
+comment on table public.household_invites is
+  'Household seat invites. RPCs: household_invite, household_list_invites, household_accept_invite, household_issue_login_code, household_claim_pc_code, household_get_activation.';

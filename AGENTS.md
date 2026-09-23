@@ -52,7 +52,7 @@ One email/password account works in **both** the Windows app and the website:
 ## Trader / legal
 
 - **Opolyonix Corp**, CVR **43410369**, Esbjerg Ø, Denmark
-- Privacy/terms notice version is `LegalCopy.NoticeVersion` (currently **v5**) — bump both in-app `LegalCopy` and `docs/privacy.html` / `docs/terms.html` together
+- Privacy/terms notice version is `LegalCopy.NoticeVersion` (currently **v6**) — bump both in-app `LegalCopy` and `docs/privacy.html` / `docs/terms.html` together
 - EU 14-day withdrawal for unused digital keys; Pro trial is separate (7 days, no card)
 
 ## Pricing (honest status)
@@ -61,7 +61,7 @@ One email/password account works in **both** the Windows app and the website:
 |------|-------|--------|
 | Free | €0 | Scan, plan, Takeout parse, catalog, GDPR templates, offline coach |
 | Lifetime Pro | €29.99 once | DNS apply + HTML report extras; Stripe Checkout |
-| Household (Stripe sku `family`) | €59.99, up to 3 PCs | Same Pro features — **multi-PC seats for one home**, not a shared “family plan” product. One key, paste on each PC. Skip if the user only has one machine. |
+| Household (Stripe sku `family`) | €59.99, up to 3 PCs | Same Pro features — multi-PC seats for one home. Website: owner invites by email; invitees get one-time login codes until they claim a PC code (then unlock activation). Unclaimed invitees stay data-minimized. Skip if only one machine. |
 | Pro trial | 7 days | Requires signed-in free account; cloud tracks `trial_started_at` |
 | Cloud Pass | €4.99/mo or €39/yr | Hosted DeGoogle AI — **code exists, not billed** until live Stripe catalog |
 

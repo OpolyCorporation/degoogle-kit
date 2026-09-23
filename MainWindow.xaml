@@ -595,7 +595,7 @@
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
                                     One PC. Unlocks Quad9 DNS apply and the HTML report. Pay in your browser; after Checkout this app can fill the key. Sign in first if you want the same Pro on another PC via your free account.
                                 </TextBlock>
-                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Cards never enter this app. By paying you agree to the terms (v5). EU/EEA: 14 days to withdraw if the key is not activated."/>
+                                <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Cards never enter this app. By paying you agree to the terms (v6). EU/EEA: 14 days to withdraw if the key is not activated."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                                     <Button Content="Buy Lifetime €29.99" Style="{StaticResource PrimaryBtn}" Click="OnBuyLifetime" Margin="0,0,8,0"/>
                                     <Button Content="Start 7-day trial" Style="{StaticResource GhostBtn}" Click="OnStartTrial"/>
@@ -610,7 +610,7 @@
                             <StackPanel>
                                 <TextBlock Text="Household — €59.99 once (up to 3 PCs)" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
-                                    Same Pro extras as Lifetime, for a household that needs several Windows PCs. One purchase, one license key — paste it on each machine (up to 3). Skip this if you only de-Google one PC; buy Lifetime instead.
+                                    Same Pro extras as Lifetime, for a household that needs several Windows PCs (up to 3). After Checkout, invite members by email on the website account page. They get one-time website login codes until they claim a PC code. Skip this if you only de-Google one PC; buy Lifetime instead.
                                 </TextBlock>
                                 <TextBlock x:Name="HouseholdStatus" Foreground="{StaticResource Accent}" TextWrapping="Wrap" Margin="0,0,0,10"
                                            Text="Not started. Buy Household, then activate the key on this PC and copy it onto the others."/>
