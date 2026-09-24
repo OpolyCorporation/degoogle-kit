@@ -1,7 +1,7 @@
 {
-  "version": "0.4.2",
-  "sha256": "ec2ec0f0bb7a1a7f3826106d2ef76bc10afd9a014c521d76784242a16218845b",
-  "changelog": "What's new in 0.4.2\r\n\r\n• License activate and account bind use the website (no local license-api)\r\n• Buy on the site checkout page, then unlock in Pro\r\n• Export and delete account data via the shared cloud account\r\n• Privacy & terms notice v7\r\n\r\nLifetime Pro €29.99 · Household €59.99",
-  "releasedAt": "2026-09-23",
-  "downloadUrl": "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.4.2/DeGoogleKit-win-x64.zip"
+  "changelog": "What's new in 0.4.3\r\n\r\n• Point checkout, account, and license activate at the published website\r\n• Clearer errors when license activate/bind cannot reach the server\r\n• Household license re-bind no longer fails on account upsert\r\n\r\nLifetime Pro €29.99 · Household €59.99",
+  "releasedAt": "2026-09-24",
+  "version": "0.4.3",
+  "downloadUrl": "https://github.com/OpolyCorporation/degoogle-kit/releases/download/v0.4.3/DeGoogleKit-win-x64.zip",
+  "sha256": "e7e2ecb4dbf4d79d6dd499989bef9062927b99e38e68c80fafc6116923ef5ccb"
 }
