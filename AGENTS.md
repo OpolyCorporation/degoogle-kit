@@ -115,7 +115,7 @@ updates/whats-new.txt       Short bullets shown in the update dialog — edit be
 
 ## Release reality (as of 2026-09)
 
-- Public Windows zip target: **v0.4.2** (website license activate/bind) — confirm `updates/latest.json` and GitHub Releases after CI finishes
+- Public Windows zip target: **v0.4.3** (published website URL) — confirm `updates/latest.json` and GitHub Releases after CI finishes
 - Before tagging: rewrite `updates/whats-new.txt` with short “What’s new” bullets (CI copies them into `latest.json` changelog)
 - App `Version` in `DeGoogleKit.csproj` must bump when cutting a new zip
 - Builds are **not code-signed** yet unless `WINDOWS_CERT_PFX` + `WINDOWS_CERT_PASSWORD` secrets are set — SmartScreen/Norton reputation warnings are expected until then
