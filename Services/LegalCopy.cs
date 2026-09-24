@@ -19,7 +19,7 @@ public static class LegalCopy
     /// <summary>
     /// Marketing / account site (Lovable). Update when a custom domain is published.
     /// </summary>
-    public const string WebsiteUrl = "https://id-preview--d11fe691-44fe-4cc4-84a5-135f3b0e7341.lovable.app";
+    public const string WebsiteUrl = "https://degoogle.lovable.app";
     public const string WebsiteAccountUrl = WebsiteUrl + "/account";
     public const string WebsiteCheckoutUrl = WebsiteUrl + "/checkout";
 

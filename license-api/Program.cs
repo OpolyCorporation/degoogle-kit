@@ -119,7 +119,7 @@ app.MapPost("/v1/account/bind", async (HttpRequest request, IConfiguration confi
         updated_at = DateTime.UtcNow
     });
     using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
-    using var req = new HttpRequestMessage(HttpMethod.Post, supabaseUrl + "/rest/v1/licenses");
+    using var req = new HttpRequestMessage(HttpMethod.Post, supabaseUrl + "/rest/v1/licenses?on_conflict=user_id");
     req.Headers.TryAddWithoutValidation("apikey", service);
     req.Headers.TryAddWithoutValidation("Authorization", "Bearer " + service);
     req.Headers.TryAddWithoutValidation("Prefer", "resolution=merge-duplicates,return=minimal");

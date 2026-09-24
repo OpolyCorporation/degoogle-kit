@@ -19,8 +19,8 @@ Scan this Windows PC → pick replacements → parse Google Takeout locally → 
 `https://github.com/OpolyCorporation/degoogle-kit/releases/latest/download/DeGoogleKit-win-x64.zip`
 
 **Website account (same Supabase as this app):**  
-Preview: `https://id-preview--d11fe691-44fe-4cc4-84a5-135f3b0e7341.lovable.app/account`  
-In-app: `LegalCopy.WebsiteAccountUrl` — update `LegalCopy.WebsiteUrl` when a custom domain is live.
+Published: `https://degoogle.lovable.app/account`  
+In-app: `LegalCopy.WebsiteAccountUrl` (`LegalCopy.WebsiteUrl` = published origin).
 
 **Legal pages (also mirrored in-app as `LegalCopy`):**  
 `https://opolycorporation.github.io/degoogle-kit/privacy.html`  

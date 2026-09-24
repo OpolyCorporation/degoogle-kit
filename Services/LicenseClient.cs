@@ -33,10 +33,30 @@ public static class LicenseClient
             var url = StripeStore.LicenseApiUrl + "/v1/license?session_id=" + Uri.EscapeDataString(sessionId);
             using var res = await http.GetAsync(url);
             var json = await res.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(json) ? "{}" : json);
             if (!res.IsSuccessStatusCode)
+            {
+                // Prefer JSON error body when present; plain Unauthorized must not throw.
+                if (LooksLikeJson(json))
+                {
+                    try
+                    {
+                        using var errDoc = JsonDocument.Parse(json);
+                        if (errDoc.RootElement.TryGetProperty("error", out var errEl) &&
+                            errEl.GetString() is { Length: > 0 } err)
+                            return (false, err, null);
+                    }
+                    catch
+                    {
+                        /* ignore */
+                    }
+                }
+                return (false, UserFacing.LicenseServerBusy(), null);
+            }
+
+            if (!LooksLikeJson(json))
                 return (false, UserFacing.LicenseServerBusy(), null);
 
+            using var doc = JsonDocument.Parse(json);
             if (!doc.RootElement.TryGetProperty("key", out var keyEl))
                 return (false, UserFacing.LicenseServerBusy(), null);
             var key = keyEl.GetString();
@@ -52,5 +72,12 @@ public static class LicenseClient
         {
             return (false, UserFacing.LicenseRedeemOffline(), null);
         }
+    }
+
+    private static bool LooksLikeJson(string? s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return false;
+        var t = s.TrimStart();
+        return t.StartsWith('{') || t.StartsWith('[');
     }
 }

@@ -202,10 +202,27 @@ public static class AccountService
                 "application/json");
             using var res = await http.SendAsync(req);
             var body = await res.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(string.IsNullOrWhiteSpace(body) ? "{}" : body);
             if (!res.IsSuccessStatusCode)
             {
-                var err = doc.RootElement.TryGetProperty("error", out var e) ? e.GetString() : body;
+                string? err = null;
+                if (!string.IsNullOrWhiteSpace(body))
+                {
+                    var trimmed = body.TrimStart();
+                    if (trimmed.StartsWith('{'))
+                    {
+                        try
+                        {
+                            using var errDoc = JsonDocument.Parse(body);
+                            if (errDoc.RootElement.TryGetProperty("error", out var e))
+                                err = e.GetString();
+                        }
+                        catch
+                        {
+                            /* plain-text body */
+                        }
+                    }
+                    err ??= body.Length > 200 ? body[..200] : body;
+                }
                 return (false, err ?? "Could not link the license to this account.");
             }
             return (true, "Pro is linked to this account. Sign in on another PC to use it.");
