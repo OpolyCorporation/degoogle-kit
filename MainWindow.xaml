@@ -180,6 +180,7 @@
                         <Button Content="Reduce (FreeTube*)" Style="{StaticResource GhostBtn}" Click="OnYtReduce" Margin="0,0,8,4"/>
                         <Button Content="Leave" Style="{StaticResource GhostBtn}" Click="OnYtLeave" Margin="0,0,8,4"/>
                         <Button Content="Archive only" Style="{StaticResource GhostBtn}" Click="OnYtArchive" Margin="0,0,8,4"/>
+                        <Button Content="Export plan Markdown (Pro)" Style="{StaticResource GhostBtn}" Click="OnExportPlanMarkdown" Margin="12,0,8,4"/>
                     </WrapPanel>
                     <TextBlock Text="*FreeTube still uses YouTube’s catalog. We label that honestly." Foreground="{StaticResource Warn}" FontSize="12" Margin="8,4,0,0"/>
                 </StackPanel>
@@ -230,6 +231,7 @@
                 </Grid.RowDefinitions>
                 <DockPanel Margin="0,0,0,14">
                     <Button DockPanel.Dock="Right" Content="Scan again" Style="{StaticResource PrimaryBtn}" Click="OnScan"/>
+                    <Button DockPanel.Dock="Right" Content="Cleanup checklist (Pro)" Style="{StaticResource GhostBtn}" Click="OnExportCleanupChecklist" Margin="0,0,8,0"/>
                     <Button DockPanel.Dock="Right" Content="Default apps" Style="{StaticResource GhostBtn}" Click="OnOpenDefaultApps" Margin="0,0,8,0"/>
                     <StackPanel>
                         <TextBlock Text="This PC" FontSize="26" FontWeight="SemiBold"/>
@@ -502,16 +504,19 @@
             <Grid x:Name="PageNetwork" Visibility="Collapsed">
                 <StackPanel>
                     <TextBlock Text="Network" FontSize="26" FontWeight="SemiBold"/>
-                    <TextBlock Text="Google DNS (8.8.8.8) still sees which hostnames you resolve. Changing DNS needs Windows admin approval and is reversible." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,16"/>
+                    <TextBlock Text="Google DNS (8.8.8.8) still sees which hostnames you resolve. Changing DNS needs Windows admin approval and is reversible. Detect and restore stay free; applying a privacy resolver is Pro." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,16"/>
                     <Border Style="{StaticResource CardBorder}">
                         <StackPanel>
                             <TextBlock Text="Current DNS" FontWeight="SemiBold"/>
                             <TextBlock x:Name="DnsText" Margin="0,8,0,0" TextWrapping="Wrap"/>
                             <TextBlock x:Name="DnsWarn" Foreground="{StaticResource Warn}" Margin="0,8,0,12" TextWrapping="Wrap"/>
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="Use Quad9 (Pro lifetime)" Style="{StaticResource PrimaryBtn}" Click="OnApplyDns" Margin="0,0,8,0"/>
-                                <Button Content="Restore previous DNS" Style="{StaticResource GhostBtn}" Click="OnRestoreDns"/>
-                            </StackPanel>
+                            <TextBlock Text="Apply privacy DNS (Pro)" FontWeight="SemiBold" Margin="0,0,0,8"/>
+                            <WrapPanel>
+                                <Button Content="Quad9" Style="{StaticResource PrimaryBtn}" Tag="Quad9" Click="OnApplyDnsPreset" Margin="0,0,8,8"/>
+                                <Button Content="Cloudflare 1.1.1.1" Style="{StaticResource GhostBtn}" Tag="Cloudflare" Click="OnApplyDnsPreset" Margin="0,0,8,8"/>
+                                <Button Content="AdGuard DNS" Style="{StaticResource GhostBtn}" Tag="AdGuard" Click="OnApplyDnsPreset" Margin="0,0,8,8"/>
+                                <Button Content="Restore previous DNS" Style="{StaticResource GhostBtn}" Click="OnRestoreDns" Margin="0,0,8,8"/>
+                            </WrapPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -572,7 +577,7 @@
                         <Border Style="{StaticResource CardBorder}">
                             <StackPanel>
                                 <TextBlock Text="Free forever" FontWeight="SemiBold"/>
-                                <TextBlock Text="The whole de-Google path: scan this PC, Your plan (Easy / Privacy / Own), Takeout parse and local converters, catalog, uninstall launcher, GDPR templates vs Google, local AI coach, permissions, export/erase your data. You do not pay to leave Google or to use your legal rights. A free account is optional and backs up your plan and checklist." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
+                                <TextBlock Text="The whole de-Google path stays free: scan this PC, Your plan, Takeout parse and local converters, uninstall launcher, GDPR templates, offline coach + your own Groq key for Send, permissions, and export/erase your data. You do not pay to leave Google or to use your legal rights. A free account is optional and backs up your plan and checklist." Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"/>
                             </StackPanel>
                         </Border>
                         <Border Style="{StaticResource CardBorder}">
@@ -593,7 +598,7 @@
                             <StackPanel>
                                 <TextBlock Text="Lifetime Pro — €29.99 once" FontWeight="SemiBold"/>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,8">
-                                    One PC. Unlocks Quad9 DNS apply and the HTML report. Pay in your browser; after Checkout this app can fill the key. Sign in first if you want the same Pro on another PC via your free account.
+                                    One PC. Unlocks privacy DNS apply (Quad9, Cloudflare, AdGuard — reversible), HTML report, plan Markdown export, and a printable PC cleanup checklist. Pay in your browser; after Checkout this app can fill the key. Sign in first if you want the same Pro on another PC via your free account.
                                 </TextBlock>
                                 <TextBlock Foreground="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,12" Text="Cards never enter this app. By paying you agree to the terms (v6). EU/EEA: 14 days to withdraw if the key is not activated."/>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,10">

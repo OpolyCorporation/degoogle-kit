@@ -61,7 +61,8 @@ One email/password account works in **both** the Windows app and the website:
 | Plan | Price | Status |
 |------|-------|--------|
 | Free | €0 | Scan, plan, Takeout parse, catalog, GDPR templates, offline coach |
-| Lifetime Pro | €29.99 once | DNS apply + HTML report extras; Stripe Checkout |
+| Lifetime Pro | €29.99 once | Privacy DNS apply (Quad9 / Cloudflare / AdGuard), HTML report, plan Markdown + cleanup checklist exports; Stripe Checkout |
+
 | Household (Stripe sku `family`) | €59.99, up to 3 PCs | Same Pro features — multi-PC seats for one home. Website: owner invites by email; invitees get one-time login codes until they claim a PC code (then unlock activation). Unclaimed invitees stay data-minimized. Skip if only one machine. |
 | Pro trial | 7 days | Requires signed-in free account; cloud tracks `trial_started_at` |
 | Cloud Pass | €4.99/mo or €39/yr | Hosted DeGoogle AI — **code exists, not billed** until live Stripe catalog |

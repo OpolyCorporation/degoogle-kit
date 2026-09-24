@@ -21,16 +21,16 @@ If Windows SmartScreen or **Norton** warns, that is an unsigned-build reputation
 - **Takeout** — drop your Google Takeout zip; parse and convert on this PC only (nothing uploaded)
 - **Rights** — GDPR-style request templates vs Google (free)
 - **Coach** — offline guides always; optional chat with *your* API key (never Google Gemini)
-- **Network** — Quad9 DNS apply/restore (Pro)
+- **Network** — detect DNS free; apply Quad9 / Cloudflare / AdGuard + restore (Pro)
 - Optional free account backs up plan and checklist only
 
 ## Pricing
 
 | | |
 |---|---|
-| **Free** | Scan, plan, Takeout, catalog, GDPR templates, offline coach |
-| **Lifetime Pro** | €29.99 once — extras such as DNS apply and HTML report |
-| **Family** | €59.99 — up to 3 PCs |
+| **Free** | Scan, plan, Takeout, GDPR templates, offline coach + your own Groq key |
+| **Lifetime Pro** | €29.99 once — privacy DNS apply, HTML report, plan Markdown + cleanup checklist |
+| **Household** | €59.99 — same Pro extras, up to 3 PCs |
 | **Trial** | 7 days of Pro with a signed-in free account (no card) |
 
 Cards are handled in the browser at checkout. EU/EEA consumers: see the terms for the 14-day withdrawal rules.

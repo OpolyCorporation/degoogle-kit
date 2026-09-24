@@ -10,12 +10,27 @@ public sealed class DnsBackup
     public List<string> Servers { get; set; } = [];
 }
 
+public enum DnsPreset
+{
+    Quad9,
+    Cloudflare,
+    AdGuard
+}
+
 public static class DnsService
 {
     private static readonly HashSet<string> GoogleDns = new(StringComparer.OrdinalIgnoreCase)
     {
         "8.8.8.8", "8.8.4.4", "2001:4860:4860::8888", "2001:4860:4860::8844"
     };
+
+    public static (string Label, string Primary, string Secondary) Describe(DnsPreset preset) =>
+        preset switch
+        {
+            DnsPreset.Cloudflare => ("Cloudflare 1.1.1.1", "1.1.1.1", "1.0.0.1"),
+            DnsPreset.AdGuard => ("AdGuard DNS", "94.140.14.14", "94.140.15.15"),
+            _ => ("Quad9", "9.9.9.9", "149.112.112.112")
+        };
 
     public static (List<string> Servers, bool LooksLikeGoogle, string Adapter) Detect()
     {
@@ -32,10 +47,6 @@ public static class DnsService
             var ips = dns.Select(ip => ip.ToString()).ToList();
             if (ips.Any(s => GoogleDns.Contains(s))) google = true;
             servers.Add(nic.Name + ": " + string.Join(", ", ips));
-            foreach (var s in ips)
-            {
-                if (!servers.Contains(s)) { /* keep labeled lines only */ }
-            }
         }
 
         return (servers, google, adapter);
@@ -48,8 +59,12 @@ public static class DnsService
         snap.DnsLooksLikeGoogle = google;
     }
 
-    public static (bool Ok, string Message) ApplyQuad9(string adapter)
+    public static (bool Ok, string Message) ApplyQuad9(string adapter) =>
+        ApplyPreset(adapter, DnsPreset.Quad9);
+
+    public static (bool Ok, string Message) ApplyPreset(string adapter, DnsPreset preset)
     {
+        var (label, primary, secondary) = Describe(preset);
         var current = Detect();
         if (string.IsNullOrWhiteSpace(adapter)) adapter = current.Adapter;
         if (string.IsNullOrWhiteSpace(adapter))
@@ -63,7 +78,7 @@ public static class DnsService
         JsonFile.Save(AppPaths.DnsBackup, new DnsBackup { Adapter = adapter, Servers = ips.Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().ToList() });
         try
         {
-            if (!RunElevatedNetsh(adapter, "9.9.9.9", "149.112.112.112"))
+            if (!RunElevatedNetsh(adapter, primary, secondary))
                 return (false, "Windows did not apply DNS. If you cancelled UAC, nothing changed.");
         }
         catch (System.ComponentModel.Win32Exception)
@@ -71,18 +86,18 @@ public static class DnsService
             return (false, "Administrator permission was not granted. DNS was not changed.");
         }
 
-        PrivacyStore.Log("dns_changed", $"adapter={adapter} -> Quad9");
+        PrivacyStore.Log("dns_changed", $"adapter={adapter} -> {label}");
         var after = Detect();
-        if (!after.Servers.Any(s => s.Contains("9.9.9.9", StringComparison.Ordinal)))
-            return (false, "Quad9 was requested but this PC still does not show 9.9.9.9. Check Settings → Network → DNS, then Scan again.");
-        return (true, "This PC now uses Quad9 (9.9.9.9 / 149.112.112.112) on " + adapter + ".");
+        if (!after.Servers.Any(s => s.Contains(primary, StringComparison.Ordinal)))
+            return (false, label + " was requested but this PC still does not show " + primary + ". Check Settings → Network → DNS, then Scan again.");
+        return (true, "This PC now uses " + label + " (" + primary + " / " + secondary + ") on " + adapter + ".");
     }
 
     public static (bool Ok, string Message) Restore()
     {
         var backup = JsonFile.Load(AppPaths.DnsBackup, (DnsBackup?)null);
         if (backup is null || string.IsNullOrWhiteSpace(backup.Adapter) || backup.Servers.Count == 0)
-            return (false, "No DNS backup found yet. Apply Quad9 once first.");
+            return (false, "No DNS backup found yet. Apply a Pro DNS preset once first.");
         var primary = backup.Servers[0];
         var secondary = backup.Servers.Count > 1 ? backup.Servers[1] : null;
         try

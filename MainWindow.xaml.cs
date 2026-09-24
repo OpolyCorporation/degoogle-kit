@@ -776,15 +776,32 @@ public partial class MainWindow : Window
         MessageBox.Show("Copied. Export via Takeout before you send an erasure request.", "Clipboard");
     }
 
-    private async void OnApplyDns(object sender, RoutedEventArgs e)
+    private async void OnApplyDns(object sender, RoutedEventArgs e) =>
+        await ApplyDnsPresetAsync(DnsPreset.Quad9);
+
+    private async void OnApplyDnsPreset(object sender, RoutedEventArgs e)
+    {
+        var tag = (sender as FrameworkElement)?.Tag?.ToString() ?? "Quad9";
+        var preset = tag switch
+        {
+            "Cloudflare" => DnsPreset.Cloudflare,
+            "AdGuard" => DnsPreset.AdGuard,
+            _ => DnsPreset.Quad9
+        };
+        await ApplyDnsPresetAsync(preset);
+    }
+
+    private async Task ApplyDnsPresetAsync(DnsPreset preset)
     {
         if (!RequirePro()) return;
+        var (label, primary, secondary) = DnsService.Describe(preset);
         if (!AskAccess.For(this, AccessKind.DnsChange,
-                "Switch this PC’s DNS to Quad9 (9.9.9.9 / 149.112.112.112)? Windows will ask for administrator permission. Current DNS is saved so you can restore it."))
+                "Switch this PC’s DNS to " + label + " (" + primary + " / " + secondary +
+                ")? Windows will ask for administrator permission. Current DNS is saved so you can restore it."))
             return;
         try
         {
-            var result = DnsService.ApplyQuad9("");
+            var result = DnsService.ApplyPreset("", preset);
             MessageBox.Show(result.Message, "DNS",
                 MessageBoxButton.OK,
                 result.Ok ? MessageBoxImage.Information : MessageBoxImage.Warning);
@@ -1033,6 +1050,34 @@ public partial class MainWindow : Window
             return;
         var path = ReportService.Write(_scan, _guide, _takeout, _planRows);
         MessageBox.Show("Saved to:\n" + path, "Report");
+        TryOpenUri(path);
+    }
+
+    private void OnExportPlanMarkdown(object sender, RoutedEventArgs e)
+    {
+        if (!RequirePro()) return;
+        if (!AskAccess.For(this, AccessKind.DesktopExport,
+                "Write your DeGoogle plan as a Markdown file on the Desktop?"))
+            return;
+        SavePlan();
+        var path = ProExportService.WritePlanMarkdown(_planRows, _planState);
+        MessageBox.Show("Saved to:\n" + path, "Export plan");
+        TryOpenUri(path);
+    }
+
+    private void OnExportCleanupChecklist(object sender, RoutedEventArgs e)
+    {
+        if (!RequirePro()) return;
+        if (_scan.Apps.Count == 0 && _scan.GoogleFolders.Count == 0 && _scan.DnsServers.Count == 0)
+        {
+            MessageBox.Show("Run a scan on This PC first, then export the checklist.", "Cleanup checklist");
+            return;
+        }
+        if (!AskAccess.For(this, AccessKind.DesktopExport,
+                "Write a printable cleanup checklist to your Desktop? It can include app names and paths from this PC."))
+            return;
+        var path = ProExportService.WriteCleanupChecklist(_scan);
+        MessageBox.Show("Saved to:\n" + path, "Cleanup checklist");
         TryOpenUri(path);
     }
 
@@ -1518,7 +1563,8 @@ public partial class MainWindow : Window
         NavPro.IsChecked = true;
         MessageBox.Show("That feature is Lifetime Pro (" + LicenseService.LifetimePrice +
                         " once). Sign in to start the " + LicenseService.TrialDays +
-                        "-day trial (no card) or activate a key. Scan, plan, Takeout, local coach, and GDPR stay free.",
+                        "-day trial (no card) or activate a key.\n\n" +
+                        "Scan, plan, Takeout, uninstall, local coach (and your own Groq key), and GDPR stay free.",
             "Pro", MessageBoxButton.OK, MessageBoxImage.Information);
         return false;
     }
