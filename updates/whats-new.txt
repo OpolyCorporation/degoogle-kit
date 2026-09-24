@@ -1,8 +1,7 @@
-What's new in 0.4.2
+What's new in 0.4.3
 
-• License activate and account bind use the website (no local license-api)
-• Buy on the site checkout page, then unlock in Pro
-• Export and delete account data via the shared cloud account
-• Privacy & terms notice v7
+• Point checkout, account, and license activate at the published website
+• Clearer errors when license activate/bind cannot reach the server
+• Household license re-bind no longer fails on account upsert
 
 Lifetime Pro €29.99 · Household €59.99
